@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "lib": ["ES2015", "DOM"],
+        "module": "CommonJS",
+        "target": "ES5",
+        "moduleResolution": "Node",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "allowJs": true,
+        "declaration": true,
+        "skipLibCheck": true,
+        "outDir": "./dist",
+    },
+    "include": ["./lib"],
+    "exclude": ["**/*.test.ts", "node_modules"],
+    "ts-node": {
+        "esm": true
+    }
+}
