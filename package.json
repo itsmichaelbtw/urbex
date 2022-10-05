@@ -1,0 +1,65 @@
+{
+  "name": "urbex",
+  "version": "1.0.0",
+  "description": "A lightweight HTTP client with built in cache support and more",
+  "main": "index.ts",
+  "types": "index.d.ts",
+  "scripts": {
+    "test": "jest --config jest.config.ts",
+    "test:verbose": "npm run test -- --verbose",
+    "coverage": "npm run test -- --coverage",
+    "lint:check": "eslint lib --ignore-path .gitignore --ext .ts",
+    "lint:fix": "eslint lib --ignore-path .gitignore --ext .ts --fix",
+    "prettier:check": "prettier --check .",
+    "prettier:write": "prettier --write .",
+    "build": "tsc",
+    "release:patch": "standard-version --release-as patch",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major",
+    "release:dry-run": "standard-version --dry-run",
+    "publish:tag": "git push origin --follow-tags",
+    "prepare": "husky install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orison-networks/urbex.git"
+  },
+  "bugs": {
+    "url": "https://github.com/orison-networks/urbex/issues"
+  },
+  "homepage": "https://github.com/orison-networks/urbex#readme",
+  "keywords": [
+    "HTTP",
+    "caching",
+    "network",
+    "nodejs",
+    "javascript"
+  ],
+  "devDependencies": {
+    "@commitlint/cli": "^17.1.2",
+    "@commitlint/config-conventional": "^17.1.0",
+    "@types/jest": "^29.0.3",
+    "@typescript-eslint/eslint-plugin": "^5.38.0",
+    "@typescript-eslint/parser": "^5.38.0",
+    "husky": "^8.0.0",
+    "jest": "^29.0.3",
+    "lint-staged": "^13.0.3",
+    "prettier": "^2.7.1",
+    "standard-version": "^9.5.0",
+    "ts-jest": "^29.0.2",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^4.8.3"
+  },
+  "standard-version": {
+    "scripts": {
+      "posttag": "npm run publish:tag"
+    }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write"
+    ]
+  },
+  "author": "Orison Networks",
+  "license": "MIT"
+}
