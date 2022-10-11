@@ -1,0 +1,73 @@
+name: Pull Request Version Bump
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  create-pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Initiate pull request
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              const { owner, repo } = context.repo;
+              const [pullRequest, changelog] = await Promise.all([
+                github.rest.pulls.list({
+                  owner,
+                  repo,
+                  head: context.ref,
+                  state: "open"
+                }),
+                github.rest.repos.getContent({
+                  owner,
+                  repo,
+                  path: "CHANGELOG.md",
+                  ref: context.ref
+                })
+              ]);
+
+              if (pullRequest.data.length > 0) {
+                console.log("Pull request already exists.");
+                return;
+              }
+
+              if (!changelog.data) {
+                console.log("No changelog found. Exiting.");
+                return;
+              }
+
+              const tags = await github.rest.repos.listTags({
+                owner,
+                repo,
+                per_page: 1
+              });
+
+              const latestTag = tags.data[0].name;
+
+              const changelogBuffer = Buffer.from(changelog.data.content, "base64").toString();
+              const changelogBody = changelogBuffer.match(/(?:##)\s[^\n]*\n(.*?)(?=\n##?\s|$)/s);
+
+              if (!changelogBody) {
+                console.log("No changelog body found. Exiting.");
+                return;
+              }
+
+              const content = changelogBody[0];
+              const newPullRequest = await github.rest.pulls.create({
+                owner: owner,
+                repo: repo,
+                title: `Release ${latestTag}`,
+                body: content,
+                head: "dev",
+                base: "main"
+              });
+
+              console.log(`Pull request created: ${newPullRequest.data.html_url}.`);
+            } catch (error) {
+              console.log(error);
+            }
+          github-token: ${{ secrets.GITHUB_TOKEN }}
