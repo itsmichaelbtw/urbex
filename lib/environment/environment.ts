@@ -1,5 +1,4 @@
 import { env } from "./env";
-import { isUndefined } from "../utils";
 
 type UrbexContext = "browser" | "node";
 
@@ -11,12 +10,15 @@ export class Environment {
     }
 
     private detectContext(): UrbexContext {
-        if (!isUndefined(window) && !isUndefined(window.document)) {
+        if (
+            typeof window !== "undefined" &&
+            typeof window.document !== "undefined"
+        ) {
             return "browser";
         }
 
         if (
-            !isUndefined(process) &&
+            typeof process !== "undefined" &&
             process.versions &&
             process.versions.node
         ) {
