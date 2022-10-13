@@ -9,7 +9,7 @@
         "allowJs": true,
         "declaration": true,
         "skipLibCheck": true,
-        "outDir": "./dist",
+        "outDir": "dist",
     },
     "include": ["./lib"],
     "exclude": ["**/*.test.ts", "node_modules"],
