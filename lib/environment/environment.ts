@@ -1,6 +1,6 @@
 import { env } from "./env";
 
-type UrbexContext = "browser" | "node";
+export type UrbexContext = "browser" | "node";
 
 export class Environment {
     private _context: UrbexContext;
