@@ -1,5 +1,5 @@
 import { environment } from "../urbex";
-import { isUndefined, isNegative, absolute } from "../utils";
+import { isUndefined, isNegative, absolute, assignOptions } from "../utils";
 import { timeProvider } from "./time-provider";
 import { CacheClock } from "./cache-clock";
 import { hash } from "./hash";
@@ -25,10 +25,6 @@ const defaultCacheOptions: CacheOptions = {
     maxItems: 1000,
     ttl: Infinity
 };
-
-function assignOptions<P, T>(defaultOptions: P, options: T): P & T {
-    return Object.assign({}, defaultOptions, options);
-}
 
 function parseOptions(
     options: Partial<CacheOptions> = {},
@@ -90,7 +86,7 @@ export class TTLCache {
         const { ttl } = parseOptions(options, this.options);
 
         const item: CacheItem = {
-            value: value,
+            value: JSON.stringify(value),
             expires: timeProvider.now() + ttl
         };
 
@@ -109,7 +105,11 @@ export class TTLCache {
             return undefined;
         }
 
-        return item.value;
+        try {
+            return JSON.parse(item.value);
+        } catch {
+            return item.value;
+        }
     }
 
     has(key: string): boolean {
