@@ -48,3 +48,5 @@ export class Environment {
         return env.get("NODE_ENV") === "production";
     }
 }
+
+export const environment = new Environment();
