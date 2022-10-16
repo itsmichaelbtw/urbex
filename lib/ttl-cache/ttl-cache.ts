@@ -1,5 +1,5 @@
 import { environment } from "../urbex";
-import { isUndefined, isNegative, absolute, assignOptions } from "../utils";
+import { isUndefined, isNegative, absolute, merge } from "../utils";
 import { timeProvider } from "./time-provider";
 import { CacheClock } from "./cache-clock";
 import { hash } from "./hash";
@@ -30,7 +30,7 @@ function parseOptions(
     options: Partial<CacheOptions> = {},
     defaultOptions: CacheOptions
 ): CacheOptions {
-    const opts = assignOptions(defaultOptions, options);
+    const opts = merge(defaultOptions, options);
 
     if (isNegative(opts.maxItems)) {
         opts.maxItems = absolute(opts.maxItems);
