@@ -40,7 +40,7 @@ export function isArray<T>(value: unknown): value is T[] {
     return Array.isArray(value);
 }
 
-export function isObject(value: unknown): value is Record<string, unknown> {
+export function isObject(value: unknown): value is object {
     return typeof value === "object" && value !== null && !isArray(value);
 }
 
@@ -118,6 +118,7 @@ export function values<T extends IObject>(obj: T): T[keyof T][] {
 /**
  * Iterate over an object or array.
  */
+
 export function forEach<T extends IObject>(
     obj: T,
     fn: (key: keyof T, value: T[keyof T], obj: T) => void
