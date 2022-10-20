@@ -12,8 +12,18 @@ interface CacheItem {
     expires: number;
 }
 
-interface CacheOptions {
+export interface CacheOptions {
+    /**
+     * The maximum number of items to store in the cache.
+     *
+     * Defaults to `1000`.
+     */
     maxItems: number;
+    /**
+     * The default time to live for items in the cache.
+     *
+     * Defaults to `Infinity`.
+     */
     ttl: CacheTTL;
 }
 
