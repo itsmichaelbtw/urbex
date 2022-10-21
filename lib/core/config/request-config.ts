@@ -1,101 +1,172 @@
-import type { Methods, RequestUrlPath } from "../../types";
-import type { BaseUrbexHeaders } from "../headers";
+import type {
+    UrbexClientOptions,
+    URLProtocol,
+    URIComponent,
+    InternalUrbexConfiguration,
+    BaseURIComponent
+} from "../types";
 
 import { UrbexHeaders } from "../headers";
-import { isObject, isUndefined, merge, deepMerge } from "../../utils";
+import { environment } from "../../environment";
+import {
+    isObject,
+    merge,
+    deepMerge,
+    clone,
+    hasOwnProperty,
+    isString,
+    extractMatchFromRegExp,
+    ensureLeadingSlash,
+    uppercase,
+    argumentIsNotProvided,
+    isEmpty
+} from "../../utils";
+import { isValidURL, uriParser } from "../url";
+import { PROTOCOL_REGEXP, HOSTNAME_REGEXP, METHODS } from "../../constants";
 
-type URI = URIOptions | RequestUrlPath;
-type URLProtocol = "http" | "https";
-
-interface URIOptions {
-    /**
-     * The transport protocol to use. Defaults to `https://`.
-     */
-    protocol?: URLProtocol;
-    /**
-     * The subdomain prefix that is attached to the active domain. Passing a
-     * full domain will extract the subdomain if one is found.
-     */
-    nsubdomai?: string;
-    /**
-     * The domain name to use. If the domain is not specified, the current domain
-     * will be used. If `environment.isNode` is `true`, then localhost is used.
-     *
-     * Only the domain and tld are extracted when a domain is passed.
-     *
-     * E.g. if
-     * the domain is `https://www.example.com/api/v1`, then the domain will be `example.com`.
-     */
-    domain: string;
-    /**
-     * If you are making a request that has an api mounted at a different url path, you
-     * can set it here. This is designed to remove the cumbersome task of specifying the full
-     * url path for each request.
-     *
-     * E.g. if you are making a request to https://example.com/api/v1, you can set the url to
-     * /api/v1 and all requests will be made to that url.
-     */
-    urlMount?: string;
-    /**
-     * The port to use. By default, no port is used.
-     */
-    port?: number | string;
-}
-
-export interface UrbexClientConfig {
-    url?: URI;
-    method?: Methods;
-    headers?: BaseUrbexHeaders;
-    params?: any;
-    data?: any;
-}
-
-type RequestConfigOptions = Omit<UrbexClientConfig, "headers"> & {
+type InternalConfig = Omit<InternalUrbexConfiguration, "headers"> & {
     headers?: UrbexHeaders;
 };
 
-// set defaults for the url
-// set defaults for the method
-// set defaults for the headers
+function determineAppropriateURI() {
+    const uriOptions: BaseURIComponent = {
+        protocol: "https",
+        hostname: null,
+        urlMount: "/api",
+        endpoint: null,
+        port: null
+    };
 
-// turn into an object. Do not use a class
+    if (environment.isBrowser) {
+        const { protocol, hostname, port } = window.location;
+
+        Object.assign(uriOptions, {
+            protocol: protocol.replace(":", "") as URLProtocol,
+            hostname: hostname,
+            port: port
+        });
+    } else if (environment.isNode) {
+        Object.assign(uriOptions, {
+            protocol: "http",
+            hostname: "localhost",
+            port: 3000
+        });
+    }
+
+    return uriOptions;
+}
+
+function validateUriComponent(uri: URIComponent) {
+    if (argumentIsNotProvided(uri)) {
+        throw new Error("URI component is not provided.");
+    }
+
+    return uriParser(clone(uri));
+}
 
 export class RequestConfig {
-    private $config: RequestConfigOptions;
+    private $config: InternalConfig;
 
-    constructor(config?: UrbexClientConfig) {
-        this.ensureDefaults();
-        this.set(config);
-    }
-
-    private ensureDefaults(): void {
+    constructor(config?: UrbexClientOptions) {
         const headers = new UrbexHeaders();
 
-        const config: RequestConfigOptions = {
-            url: "",
+        const cfg: InternalConfig = {
+            url: {},
             method: "GET",
-            headers: headers
+            headers: headers,
+            data: null,
+            timeout: 0
         };
 
-        this.$config = config;
+        const uriComponent = uriParser(determineAppropriateURI());
+
+        this.$config = merge(cfg, { url: uriComponent });
+
+        if (isObject(config) && !isEmpty(config)) {
+            this.set(config);
+        }
     }
 
-    set<T extends UrbexClientConfig>(config?: T): void {
-        if (isUndefined(config) || !isObject(config)) {
-            return;
+    private defaultConfig() {}
+
+    public validateURIComponent(uri: URIComponent): URIComponent {
+        if (argumentIsNotProvided(uri)) {
+            throw new Error("URI component is not provided.");
         }
 
-        this.$config = deepMerge(this.$config, config);
+        return validateUriComponent(uri);
     }
 
-    get(): UrbexClientConfig {
+    public parseIncomingConfig<T extends UrbexClientOptions>(
+        config: T,
+        allowEndpoints: boolean
+    ): T {
+        if (argumentIsNotProvided(config) || !isObject(config)) {
+            throw new Error(
+                "The configuration must be an object with valid properties."
+            );
+        }
+
+        const cfg: T = clone(config);
+
+        if (hasOwnProperty(cfg, "headers")) {
+            cfg.headers = this.$config.headers.normalize(cfg.headers);
+        }
+
+        if (hasOwnProperty(cfg, "url")) {
+            if (isObject(cfg.url)) {
+                cfg.url = merge(this.get().url, cfg.url);
+            }
+
+            cfg.url = uriParser(cfg.url, cfg.params, allowEndpoints);
+        }
+
+        if (hasOwnProperty(cfg, "method")) {
+            const method = uppercase(cfg.method);
+
+            if (!METHODS.includes(method)) {
+                throw new Error(
+                    `The method ${method} is not a valid HTTP method.`
+                );
+            }
+
+            cfg.method = method;
+        }
+
+        return cfg;
+    }
+
+    public set<T extends UrbexClientOptions>(
+        config: T,
+        allowEndpoints: boolean = false
+    ): void {
+        const cfg = this.parseIncomingConfig(config, allowEndpoints);
+
+        if (cfg) {
+            if (hasOwnProperty(cfg, "headers")) {
+                this.$config.headers.set(cfg.headers);
+                delete cfg.headers;
+            }
+
+            this.$config = merge(this.$config, cfg);
+        }
+    }
+
+    public get(): InternalUrbexConfiguration {
         const headers = this.$config.headers.get();
         return merge(this.$config, { headers });
     }
 
-    merge() {}
+    /**
+     * Merge the current configuration with a provided configuration.
+     * This does not set the configuration, but rather merges and returns it.
+     */
+    public merge(config?: UrbexClientOptions) {
+        return deepMerge(this.get(), config);
+    }
 
-    reset() {}
-
-    clear() {}
+    /**
+     * Reset the configuration to its default state.
+     */
+    public reset() {}
 }
