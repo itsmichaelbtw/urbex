@@ -9,16 +9,26 @@ describe("new Environment", () => {
         env.set("NODE_ENV", "development");
     });
 
-    it("should detect the environment context", () => {
+    it("should detect the environment context (browser)", function () {
         if (environment.isNode) {
-            chai.assert.strictEqual(environment.context, "node");
-            chai.assert.strictEqual(environment.isBrowser, false);
+            this.skip();
+            return;
         }
 
+        chai.assert.strictEqual(environment.context, "browser");
+        chai.assert.strictEqual(environment.isBrowser, true);
+        chai.assert.strictEqual(environment.isNode, false);
+    });
+
+    it("should detect the environment context (node)", function () {
         if (environment.isBrowser) {
-            chai.assert.strictEqual(environment.context, "browser");
-            chai.assert.strictEqual(environment.isNode, false);
+            this.skip();
+            return;
         }
+
+        chai.assert.strictEqual(environment.context, "node");
+        chai.assert.strictEqual(environment.isNode, true);
+        chai.assert.strictEqual(environment.isBrowser, false);
     });
 
     it("current environment should be development", () => {
