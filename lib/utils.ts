@@ -1,6 +1,4 @@
-type IObject = {
-    [key: string]: any;
-};
+import type { IObject } from "./types";
 
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
     k: infer I
@@ -48,6 +46,10 @@ export function isString(value: unknown): value is string {
     return typeof value === "string";
 }
 
+export function isFunction(value: unknown): value is Function {
+    return typeof value === "function";
+}
+
 export function isEmpty(value: any): boolean {
     if (isArray(value)) {
         return value.length === 0;
@@ -81,7 +83,7 @@ export function clone<T>(value: T): T {
     }
 }
 
-export function merge<P, T>(defaultOptions: P, options: T): P & T {
+export function merge<P = any, T = any>(defaultOptions: P, options: T): P & T {
     return Object.assign({}, defaultOptions, options);
 }
 
@@ -119,7 +121,7 @@ export function values<T extends IObject>(obj: T): T[keyof T][] {
  * Iterate over an object or array.
  */
 
-export function forEach<T extends IObject>(
+export function forEach<T>(
     obj: T,
     fn: (key: keyof T, value: T[keyof T], obj: T) => void
 ): void {
@@ -167,10 +169,42 @@ export function startsWithReplacer(
     return value;
 }
 
+export function stringReplacer(
+    value: string,
+    search: string | RegExp,
+    replace: string
+): string {
+    return value.replace(search, replace);
+}
+
 export function ensureLeadingSlash(value: string): string {
+    if (argumentIsNotProvided(value)) {
+        return "";
+    }
+
     if (value.startsWith("/")) {
         return value;
     }
 
     return `/${value}`;
+}
+
+export function argumentIsNotProvided(value: unknown): boolean {
+    return value === undefined || value === null;
+}
+
+export function createPromise<T>(
+    executor: (
+        resolve: (value?: T) => void,
+        reject: (reason?: any) => void
+    ) => void
+): Promise<T> {
+    return new Promise<T>(executor);
+}
+
+export function combineStrings(
+    delimiter: string = "",
+    ...strings: string[]
+): string {
+    return strings.filter((string) => !isEmpty(string)).join(delimiter);
 }
