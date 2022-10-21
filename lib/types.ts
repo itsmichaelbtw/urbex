@@ -1,4 +1,4 @@
-type MethodsUpper =
+export type MethodsUpper =
     | "GET"
     | "POST"
     | "PUT"
@@ -6,7 +6,7 @@ type MethodsUpper =
     | "PATCH"
     | "HEAD"
     | "OPTIONS";
-type MethodsLower =
+export type MethodsLower =
     | "get"
     | "post"
     | "put"
@@ -17,3 +17,7 @@ type MethodsLower =
 
 export type Methods = MethodsUpper | MethodsLower;
 export type RequestUrlPath = string;
+
+export type IObject = {
+    [key: string]: any;
+};
