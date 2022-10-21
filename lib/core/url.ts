@@ -27,12 +27,12 @@ import {
     isEmpty
 } from "../utils";
 
-type URLStringBuilder = Pick<
+export type URLStringBuilder = Pick<
     URIOptions,
     "protocol" | "hostname" | "port" | "urlMount" | "endpoint" | "params"
 >;
 
-type ParamSerializerType = "string" | "object" | "URLSearchParams";
+export type ParamSerializerType = "string" | "object" | "URLSearchParams";
 
 /**
  * Test if a url string has a valid protocol.
