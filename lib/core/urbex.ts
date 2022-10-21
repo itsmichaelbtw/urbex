@@ -27,7 +27,8 @@ import {
 } from "../utils";
 import {
     convertStringToURIComponent,
-    convertURIComponentToString
+    convertURIComponentToString,
+    serializeParams
 } from "./url";
 import { METHODS } from "../constants";
 
@@ -132,9 +133,24 @@ export class UrbexClient extends RequestApi {
             };
         }
 
+        // temporary fix for: https://github.com/orison-networks/urbex/issues/6
+        // will likely want to merge this with the uriParser if available
+        const params = merge(
+            // @ts-ignore
+            this.config.params,
+            serializeParams(config.params, "object")
+        );
+
         const cfg = this.$config.merge(
-            this.$config.parseIncomingConfig(config, true)
+            this.$config.parseIncomingConfig(
+                merge(config, {
+                    params
+                }),
+                true
+            )
         ) as InternalUrbexConfiguration;
+
+        console.log(cfg);
 
         return this.dispatchRequest(cfg);
     }
