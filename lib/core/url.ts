@@ -65,12 +65,12 @@ export function isValidURL(url: string): boolean {
 
 export function convertStringToURIComponent(
     input: string,
-    urlMount?: string
+    urlMount: string = ""
 ): URIComponent {
     const url = new URL(input);
 
     const protocol = stringReplacer(url.protocol, ":", "") as URLProtocol;
-    const port = url.port ? parseInt(url.port) : null;
+    const port = url.port ? parseInt(url.port) : "";
     const pathname = stringReplacer(url.pathname, urlMount, "");
 
     return {
