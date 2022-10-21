@@ -5,7 +5,8 @@ import {
     hasOwnProperty,
     forEach,
     deepMerge,
-    capitalize
+    capitalize,
+    argumentIsNotProvided
 } from "../utils";
 import { debug } from "../debug";
 
@@ -63,10 +64,6 @@ function normalizeHeaders(headers: BaseUrbexHeaders): ObjectHeaders {
 }
 
 function formatHeaderKey(key: string): string {
-    if (isUndefined(key)) {
-        return undefined;
-    }
-
     return key.split("-").map(capitalize).join("-");
 }
 
@@ -91,7 +88,10 @@ export class UrbexHeaders {
      * @param headers The headers to set
      * @param merge Whether to merge the headers with the existing configuration
      */
-    set(headers?: BaseUrbexHeaders, merge: boolean = true): BaseUrbexHeaders {
+    public set(
+        headers?: BaseUrbexHeaders,
+        merge: boolean = true
+    ): BaseUrbexHeaders {
         if (!isObject(headers)) {
             debug(
                 "error",
@@ -100,7 +100,7 @@ export class UrbexHeaders {
             return headers;
         }
 
-        const normalizedHeaders = normalizeHeaders(headers);
+        const normalizedHeaders = this.normalize(headers);
         const merged = merge
             ? deepMerge(this.$headers, normalizedHeaders)
             : normalizedHeaders;
@@ -110,13 +110,13 @@ export class UrbexHeaders {
     /**
      * Get the current headers object
      */
-    get(): BaseUrbexHeaders {
+    public get(): BaseUrbexHeaders {
         return this.$headers;
     }
     /**
      * Delete a header from the headers object
      */
-    delete(key: string): void {
+    public delete(key: string): void {
         forEach(this.$headers, (headerKey) => {
             if (headerKey.toLowerCase() === key.toLowerCase()) {
                 delete this.$headers[headerKey];
@@ -129,11 +129,19 @@ export class UrbexHeaders {
      * @param empty Whether to empty the headers object
      *
      */
-    clear(empty: boolean = false): void {
+    public clear(empty: boolean = false): void {
         this.$headers = {};
 
         if (!empty) {
             this.set(DefaultHeaders);
         }
+    }
+
+    public normalize(headers: BaseUrbexHeaders): ObjectHeaders {
+        if (argumentIsNotProvided(headers) || !isObject(headers)) {
+            return {};
+        }
+
+        return normalizeHeaders(headers);
     }
 }
