@@ -25,7 +25,7 @@ export class Environment {
             return "node";
         }
 
-        throw new Error("Could not detect environment context");
+        throw new Error("Unable to detect environment context.");
     }
 
     get context(): UrbexContext {
