@@ -32,6 +32,8 @@ type URLStringBuilder = Pick<
     "protocol" | "hostname" | "port" | "urlMount" | "endpoint" | "params"
 >;
 
+type ParamSerializerType = "string" | "object" | "URLSearchParams";
+
 /**
  * Test if a url string has a valid protocol.
  *
@@ -125,7 +127,7 @@ export function uriParser(
     params: SearchParams = null,
     allowEndpoints: boolean = true
 ): URIComponent {
-    const serializedParams = serializeParams(params);
+    const serializedParams = serializeParams(params, "string") as string;
 
     if (isString(uri)) {
         if (isValidURL(uri)) {
@@ -171,17 +173,28 @@ export function uriParser(
     );
 }
 
-export function serializeParams(params: SearchParams): string {
+export function serializeParams(
+    params: SearchParams,
+    serializerType: ParamSerializerType = "string"
+): Record<string, string> | string {
     if (argumentIsNotProvided(params)) {
         return null;
     }
 
-    if (params instanceof URLSearchParams) {
-        return params.toString();
-    }
-
     try {
-        return new URLSearchParams(params).toString();
+        const searchParams = new URLSearchParams(params);
+
+        if (serializerType === "object") {
+            const params = {};
+
+            searchParams.forEach((value, key) => {
+                params[key] = value;
+            });
+
+            return params;
+        }
+
+        return searchParams.toString();
     } catch (error) {
         return null;
     }

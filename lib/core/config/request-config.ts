@@ -21,7 +21,7 @@ import {
     argumentIsNotProvided,
     isEmpty
 } from "../../utils";
-import { isValidURL, uriParser } from "../url";
+import { isValidURL, serializeParams, uriParser } from "../url";
 import { PROTOCOL_REGEXP, HOSTNAME_REGEXP, METHODS } from "../../constants";
 
 type InternalConfig = Omit<InternalUrbexConfiguration, "headers"> & {
@@ -111,6 +111,13 @@ export class RequestConfig {
 
         if (hasOwnProperty(cfg, "headers")) {
             cfg.headers = this.$config.headers.normalize(cfg.headers);
+        }
+
+        if (
+            (hasOwnProperty(cfg, "params") && isString(cfg.params)) ||
+            cfg.params instanceof URLSearchParams
+        ) {
+            cfg.params = serializeParams(cfg.params, "object");
         }
 
         if (hasOwnProperty(cfg, "url")) {
