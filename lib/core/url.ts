@@ -23,7 +23,8 @@ import {
     combineStrings,
     forEach,
     merge,
-    isFunction
+    isFunction,
+    isEmpty
 } from "../utils";
 
 type URLStringBuilder = Pick<
@@ -33,6 +34,8 @@ type URLStringBuilder = Pick<
 
 /**
  * Test if a url string has a valid protocol.
+ *
+ * Most likely going to deprecate this function.
  */
 export function isProtocolURL(url: string): boolean {
     return PROTOCOL_REGEXP.test(url);
@@ -40,6 +43,8 @@ export function isProtocolURL(url: string): boolean {
 
 /**
  * Test if a url string has a valid hostname.
+ *
+ * Most likely going to deprecate this function.
  */
 export function isHostnameURL(url: string): boolean {
     return HOSTNAME_REGEXP.test(url);
@@ -92,6 +97,10 @@ export function convertURIComponentToString(input: URLStringBuilder): string {
         );
     }
 
+    if (argumentIsNotProvided(input) || isEmpty(input) || !isObject(input)) {
+        return "";
+    }
+
     forEach(input, (key, value) => {
         const regex = createRegexString(key);
 
@@ -140,7 +149,7 @@ export function uriParser(
         }
     } else if (isObject(uri)) {
         // prettier-ignore
-        const protocol = extractMatchFromRegExp(uri.protocol, PROTOCOL_REGEXP, 0) as URLProtocol;
+        const protocol = extractMatchFromRegExp(uri.protocol, PROTOCOL_REGEXP, 0, "http") as URLProtocol;
         // prettier-ignore
         const hostname = stringReplacer(uri.hostname, new RegExp(`^${protocol}://`, "gi"), "");
 
