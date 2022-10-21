@@ -15,7 +15,7 @@ import {
     merge
 } from "../lib/utils";
 
-describe("urbex utils", () => {
+describe("utils", () => {
     describe("absolute", () => {
         it("should return a absolute value of a number", () => {
             const result = absolute(-1001.11);
