@@ -1,7 +1,7 @@
 import chai from "chai";
 
-import { UrbexHeaders, BaseUrbexHeaders } from "../lib/core/headers";
-import { forEach } from "../lib/utils";
+import { UrbexHeaders, BaseUrbexHeaders } from "../../lib/core/headers";
+import { forEach } from "../../lib/utils";
 
 const headers = new UrbexHeaders();
 
@@ -80,5 +80,21 @@ describe("UrbexHeaders", () => {
         const result = headers.get();
 
         chai.expect(result).to.deep.equal({});
+    });
+
+    it("should create a safe header object (normalized)", () => {
+        const object = {
+            "X-FoO": "bar",
+            "x-bar": "foo",
+            "x-BAZ": "FOO"
+        };
+
+        const result = headers.normalize(object);
+
+        chai.expect(result).to.deep.equal({
+            "X-Foo": "bar",
+            "X-Bar": "foo",
+            "X-Baz": "FOO"
+        });
     });
 });
