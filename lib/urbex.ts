@@ -1,3 +1,5 @@
+import type { UrbexClientOptions } from "./core/types";
+
 import { environment, Environment, env } from "./environment";
 import { UrbexClient, isUrbexClient } from "./core/urbex";
 
@@ -9,7 +11,7 @@ interface IUrbexClient extends UrbexClient {
      * instance. Furthermore, changes made to the new instance
      * will not affect the original instance
      */
-    isolateClient(): UrbexClient;
+    isolateClient(config?: UrbexClientOptions): UrbexClient;
     /**
      *
      * TypeScript safe guard to check if an object is an instance of UrbexClient
