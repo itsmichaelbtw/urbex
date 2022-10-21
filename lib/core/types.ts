@@ -4,7 +4,11 @@ import type { CacheOptions } from "../ttl-cache/ttl-cache";
 export type URIOptions = any;
 
 export type URLProtocol = "http" | "https";
-export type SearchParams = URLSearchParams | Record<string, string> | string;
+export type SearchParams =
+    | URLSearchParams
+    | Record<string, string>
+    | string
+    | null;
 export type UrbexURL = BaseURIComponent | RequestUrlPath;
 
 export type DispatchedResponse = Promise<ResponseConfig>;
