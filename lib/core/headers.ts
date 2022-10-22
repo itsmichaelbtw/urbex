@@ -4,11 +4,13 @@ import {
     isUndefined,
     hasOwnProperty,
     forEach,
-    deepMerge,
+    merge,
     capitalize,
     argumentIsNotProvided
 } from "../utils";
 import { debug } from "../debug";
+import { VERSION } from "../version";
+import { environment, env } from "../environment";
 
 type UrbexHeaderValues = string | number | boolean | null | undefined;
 type ObjectHeaders = Record<string, UrbexHeaderValues>;
@@ -71,6 +73,16 @@ export class UrbexHeaders {
     protected $headers: BaseUrbexHeaders = {};
 
     constructor() {
+        if (environment.isNode) {
+            this.set(
+                merge(DefaultHeaders, {
+                    "User-Agent": `UrbexClient/v${VERSION} (Node.js ${process.version}; ${process.platform})`
+                })
+            );
+
+            return;
+        }
+
         this.set(DefaultHeaders);
     }
 
@@ -86,11 +98,11 @@ export class UrbexHeaders {
      * Optionally, you can pass a boolean to clear the existing configuration
      *
      * @param headers The headers to set
-     * @param merge Whether to merge the headers with the existing configuration
+     * @param forceMerge Whether to merge the headers with the existing configuration
      */
     public set(
         headers?: BaseUrbexHeaders,
-        merge: boolean = true
+        forceMerge: boolean = true
     ): BaseUrbexHeaders {
         if (!isObject(headers)) {
             debug(
@@ -101,8 +113,8 @@ export class UrbexHeaders {
         }
 
         const normalizedHeaders = this.normalize(headers);
-        const merged = merge
-            ? deepMerge(this.$headers, normalizedHeaders)
+        const merged = forceMerge
+            ? merge(this.$headers, normalizedHeaders)
             : normalizedHeaders;
 
         return (this.$headers = merged);
