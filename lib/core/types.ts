@@ -1,12 +1,12 @@
 import type { RequestUrlPath, Methods, IObject } from "../types";
 import type { BaseUrbexHeaders } from "./headers";
 import type { CacheOptions } from "../ttl-cache/ttl-cache";
-export type URIOptions = any;
 
+export type URIOptions = any;
 export type URLProtocol = "http" | "https";
 export type SearchParams =
     | URLSearchParams
-    | Record<string, string>
+    | Record<string, any>
     | string
     | null;
 export type UrbexURL = BaseURIComponent | RequestUrlPath;
@@ -21,8 +21,7 @@ export interface ResponseConfig {
  * Request API that powers the `urbex` client under the hood.
  */
 export interface UrbexRequestApi {
-    create(): void;
-    send(): void;
+    send(config: InternalUrbexConfiguration): DispatchedResponse;
 }
 
 // provided to the client as pass through options
