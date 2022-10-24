@@ -9,7 +9,6 @@ import {
     argumentIsNotProvided
 } from "../utils";
 import { debug } from "../debug";
-import { VERSION } from "../version";
 import { environment, env } from "../environment";
 
 type UrbexHeaderValues = string | number | boolean | null | undefined;
@@ -76,7 +75,7 @@ export class UrbexHeaders {
         if (environment.isNode) {
             this.set(
                 merge(DefaultHeaders, {
-                    "User-Agent": `UrbexClient/v${VERSION} (Node.js ${process.version}; ${process.platform})`
+                    "User-Agent": `UrbexClient (Node.js ${process.version}; ${process.platform})`
                 })
             );
 
