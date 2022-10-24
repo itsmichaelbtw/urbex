@@ -1,7 +1,6 @@
 import { env } from "./env";
-import { isUndefined } from "../utils";
 
-type UrbexContext = "browser" | "node";
+export type UrbexContext = "browser" | "node";
 
 export class Environment {
     private _context: UrbexContext;
@@ -11,19 +10,22 @@ export class Environment {
     }
 
     private detectContext(): UrbexContext {
-        if (!isUndefined(window) && !isUndefined(window.document)) {
+        if (
+            typeof window !== "undefined" &&
+            typeof window.document !== "undefined"
+        ) {
             return "browser";
         }
 
         if (
-            !isUndefined(process) &&
+            typeof process !== "undefined" &&
             process.versions &&
             process.versions.node
         ) {
             return "node";
         }
 
-        throw new Error("Could not detect environment context");
+        throw new Error("Unable to detect environment context.");
     }
 
     get context(): UrbexContext {
@@ -46,3 +48,5 @@ export class Environment {
         return env.get("NODE_ENV") === "production";
     }
 }
+
+export const environment = new Environment();
