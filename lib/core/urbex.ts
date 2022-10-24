@@ -5,7 +5,8 @@ import type {
     DispatchedResponse,
     UrbexURL,
     PassableConfig,
-    InternalUrbexConfiguration
+    InternalUrbexConfiguration,
+    UrbexRequestApi
 } from "./types";
 
 import { RequestApi } from "./api/request-api";
@@ -77,6 +78,20 @@ export interface UrbexClient {
     options(url: UrbexURL, config?: NullableRequestBody): DispatchedResponse;
 }
 
+function createMethodConfig(
+    method: Methods,
+    uri: UrbexURL,
+    config: PassableConfig
+): UrbexClientOptions {
+    if (argumentIsNotProvided(uri)) {
+        throw new Error(
+            "Attempted to call a HTTP method without providing a URL. If you want to use the default URL, use `urbex.send` instead."
+        );
+    }
+
+    return merge(config, { url: uri, method: method });
+}
+
 export class UrbexClient extends RequestApi {
     private $config: RequestConfig;
     private $interceptors = {};
@@ -96,20 +111,6 @@ export class UrbexClient extends RequestApi {
         return new UrbexClient(config);
     }
 
-    private createMethodConfig(
-        method: Methods,
-        uri: UrbexURL,
-        config: PassableConfig
-    ): UrbexClientOptions {
-        if (argumentIsNotProvided(uri)) {
-            throw new Error(
-                "Attempted to call a HTTP method without providing a URL. If you want to use the default URL, use `urbex.send` instead."
-            );
-        }
-
-        return merge(config, { url: uri, method: method });
-    }
-
     get config(): Readonly<InternalUrbexConfiguration> {
         return this.$config.get();
     }
@@ -125,7 +126,7 @@ export class UrbexClient extends RequestApi {
         this.$config.set(config, false);
     }
 
-    public send(config?: UrbexClientOptions): DispatchedResponse {
+    public send(config: UrbexClientOptions = {}): DispatchedResponse {
         // https://github.com/orison-networks/urbex/issues/4
         if (isString(config.url) && config.url.startsWith("/")) {
             config.url = {
@@ -149,8 +150,6 @@ export class UrbexClient extends RequestApi {
                 true
             )
         ) as InternalUrbexConfiguration;
-
-        console.log(cfg);
 
         return this.dispatchRequest(cfg);
     }
@@ -193,7 +192,7 @@ forEach(["post", "put", "patch"], (_, value: MethodsUpper) => {
 
         const cfg = combineIncomingConfig();
 
-        return this.send(this.createMethodConfig(uppercase(value), url, cfg));
+        return this.send(createMethodConfig(uppercase(value), url, cfg));
     };
 });
 
