@@ -1,4 +1,9 @@
-import type { Methods, MethodsUpper, RequestUrlPath } from "../types";
+import type {
+    Methods,
+    MethodsLower,
+    MethodsUpper,
+    RequestUrlPath
+} from "../types";
 import type {
     UrbexClientOptions,
     URIComponent,
@@ -161,7 +166,7 @@ export class UrbexClient extends RequestApi {
     public subscribe() {}
 }
 
-forEach(["delete", "get", "head", "options"], (_, value: MethodsUpper) => {
+forEach(["delete", "get", "head", "options"], (_, value: MethodsLower) => {
     UrbexClient.prototype[value] = function (
         url: UrbexURL,
         config?: NullableRequestBody
@@ -172,7 +177,7 @@ forEach(["delete", "get", "head", "options"], (_, value: MethodsUpper) => {
     };
 });
 
-forEach(["post", "put", "patch"], (_, value: MethodsUpper) => {
+forEach(["post", "put", "patch"], (_, value: MethodsLower) => {
     UrbexClient.prototype[value] = function (
         url: UrbexURL,
         data?: any,
