@@ -3,11 +3,12 @@ import type {
     URLProtocol,
     URIComponent,
     InternalUrbexConfiguration,
-    BaseURIComponent
-} from "../types";
+    BaseURIComponent,
+    InternalRequestConfig
+} from "./types";
 
-import { UrbexHeaders } from "../headers";
-import { environment } from "../../environment";
+import { UrbexHeaders } from "./headers";
+import { environment } from "../environment";
 import {
     isObject,
     merge,
@@ -20,13 +21,9 @@ import {
     uppercase,
     argumentIsNotProvided,
     isEmpty
-} from "../../utils";
-import { isValidURL, serializeParams, uriParser } from "../url";
-import { PROTOCOL_REGEXP, HOSTNAME_REGEXP, METHODS } from "../../constants";
-
-type InternalConfig = Omit<InternalUrbexConfiguration, "headers"> & {
-    headers?: UrbexHeaders;
-};
+} from "../utils";
+import { isValidURL, serializeParams, uriParser } from "./url";
+import { PROTOCOL_REGEXP, HOSTNAME_REGEXP, METHODS } from "../constants";
 
 function determineAppropriateURI() {
     const uriOptions: BaseURIComponent = {
@@ -65,12 +62,12 @@ function validateUriComponent(uri: URIComponent) {
 }
 
 export class RequestConfig {
-    private $config: InternalConfig;
+    private $config: InternalRequestConfig;
 
     constructor(config?: UrbexClientOptions) {
         const headers = new UrbexHeaders();
 
-        const cfg: InternalConfig = {
+        const cfg: InternalRequestConfig = {
             url: {},
             method: "GET",
             headers: headers,
