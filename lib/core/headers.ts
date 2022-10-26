@@ -6,13 +6,16 @@ import {
     forEach,
     merge,
     capitalize,
-    argumentIsNotProvided
+    argumentIsNotProvided,
+    isEmpty
 } from "../utils";
 import { debug } from "../debug";
 import { environment, env } from "../environment";
 
+// refactor types at a later date
 type UrbexHeaderValues = string | number | boolean | null | undefined;
 type ObjectHeaders = Record<string, UrbexHeaderValues>;
+type NormalizedHeaders = Record<string, string>;
 type ArrayHeaders = Array<[string, UrbexHeaderValues]>;
 
 export type BaseUrbexHeaders = ObjectHeaders;
@@ -45,8 +48,8 @@ function parseHeaderValue(value: UrbexHeaderValues): string {
     return String(value);
 }
 
-function normalizeHeaders(headers: BaseUrbexHeaders): ObjectHeaders {
-    const newHeaders: BaseUrbexHeaders = {};
+function normalizeHeaders(headers: BaseUrbexHeaders): NormalizedHeaders {
+    const newHeaders: NormalizedHeaders = {};
 
     forEach(headers, (key, value) => {
         if (isUndefined(key) || isUndefined(value)) {
@@ -69,20 +72,30 @@ function formatHeaderKey(key: string): string {
 }
 
 export class UrbexHeaders {
-    protected $headers: BaseUrbexHeaders = {};
+    protected $headers: NormalizedHeaders = {};
 
-    constructor() {
-        if (environment.isNode) {
-            this.set(
-                merge(DefaultHeaders, {
-                    "User-Agent": `UrbexClient (Node.js ${process.version}; ${process.platform})`
-                })
-            );
+    constructor(headers?: BaseUrbexHeaders, fromConstruction: boolean = false) {
+        if (!fromConstruction) {
+            if (environment.isNode) {
+                this.set(
+                    merge(DefaultHeaders, {
+                        "User-Agent": `UrbexClient (Node.js ${process.version}; ${process.platform})`
+                    })
+                );
 
-            return;
+                return;
+            }
+
+            this.set(DefaultHeaders, false);
         }
 
-        this.set(DefaultHeaders);
+        if (isObject(headers) && !isEmpty(headers)) {
+            this.set(headers, !fromConstruction);
+        }
+    }
+
+    static construct(headers: BaseUrbexHeaders): UrbexHeaders {
+        return new UrbexHeaders(headers, true);
     }
 
     get defaults(): typeof DefaultHeaders {
@@ -121,9 +134,17 @@ export class UrbexHeaders {
     /**
      * Get the current headers object
      */
-    public get(): BaseUrbexHeaders {
+    public get(): NormalizedHeaders {
         return this.$headers;
     }
+
+    /**
+     * Whether the headers object contains a given header
+     */
+    public has(key: string): boolean {
+        return hasOwnProperty(this.$headers, key);
+    }
+
     /**
      * Delete a header from the headers object
      */
@@ -148,7 +169,11 @@ export class UrbexHeaders {
         }
     }
 
-    public normalize(headers: BaseUrbexHeaders): ObjectHeaders {
+    /**
+     * Normalize an incoming headers object
+     */
+
+    public normalize(headers: BaseUrbexHeaders): NormalizedHeaders {
         if (argumentIsNotProvided(headers) || !isObject(headers)) {
             return {};
         }
