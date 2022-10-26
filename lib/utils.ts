@@ -6,6 +6,14 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
     ? I
     : never;
 
+/**
+ * Check the Object.prototype.toString.call() of a value. Strips the [object ] part.
+ */
+export function toStringCall(value: any): string {
+    const string = Object.prototype.toString.call(value);
+    return lowercase(string.substring(8, string.length - 1));
+}
+
 export function hasOwnProperty<X extends IObject, Y extends PropertyKey>(
     obj: X,
     prop: Y
@@ -207,4 +215,20 @@ export function combineStrings(
     ...strings: string[]
 ): string {
     return strings.filter((string) => !isEmpty(string)).join(delimiter);
+}
+
+export function replaceObjectProperty<T extends IObject, K extends keyof T>(
+    obj: T,
+    key: K,
+    value: T[K]
+): void {
+    Object.assign(obj, { [key]: value });
+}
+
+export function safeStringify(value: any): string {
+    try {
+        return JSON.stringify(value);
+    } catch (error) {
+        return "";
+    }
 }
