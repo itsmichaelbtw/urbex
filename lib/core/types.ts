@@ -1,5 +1,5 @@
-import type { RequestUrlPath, Methods, IObject } from "../types";
-import type { BaseUrbexHeaders } from "./headers";
+import type { RequestUrlPath, Methods } from "../types";
+import type { BaseUrbexHeaders, UrbexHeaders } from "./headers";
 import type { CacheOptions } from "../ttl-cache/ttl-cache";
 
 export type URIOptions = any;
@@ -11,20 +11,24 @@ export type SearchParams =
     | null;
 export type UrbexURL = BaseURIComponent | RequestUrlPath;
 
-export type DispatchedResponse = Promise<ResponseConfig>;
+export type DispatchedResponse = Promise<UrbexResponse>;
 
-export interface ResponseConfig {
+export interface UrbexResponse {
     data: any;
+    headers: BaseUrbexHeaders;
+    status: number;
+    statusText: string;
+    request: any;
 }
 
 /**
  * Request API that powers the `urbex` client under the hood.
  */
 export interface UrbexRequestApi {
-    send(config: InternalUrbexConfiguration): DispatchedResponse;
+    send(config: ParsedClientConfiguration): DispatchedResponse;
 }
 
-// provided to the client as pass through options
+// // provided to the client as pass through options
 export interface BaseURIComponent {
     /**
      * The transport protocol to use.
@@ -70,8 +74,6 @@ export interface BaseURIComponent {
      */
     port?: number | string | null;
 }
-
-// used internally and will be the return type of config.url
 export interface URIComponent extends BaseURIComponent {
     /**
      * The full url of the request that was passed to the client.
@@ -125,25 +127,44 @@ interface BaseConfiguration {
     cache?: CacheOptions | false;
 }
 
-export interface InternalUrbexConfiguration extends BaseConfiguration {
-    url?: URIComponent;
-}
+// strictly for external use only by the user
 
-export interface UrbexClientOptions extends BaseConfiguration {
+export type ConfigurableClientUrl = BaseURIComponent | RequestUrlPath;
+
+export interface ConfigurableUrbexClient extends BaseConfiguration {
     /**
      * Configure the base url for the client.
      *
      * Note: When passing a URI object, the object will be merged with the default URI options.
      * If you wish to remove the default options, pass `null` as the value for the property.
      */
-    url?: UrbexURL;
+    url?: ConfigurableClientUrl;
     /**
      * The query string to use in the request.
      */
     params?: SearchParams;
 }
 
-/**
- * A configuration that can be passed as a parameter via a request method.
- */
-export type PassableConfig = Omit<UrbexClientOptions, "url" | "method">;
+// prettier-ignore
+export interface ParsedClientConfiguration extends Omit<BaseConfiguration, "headers"> {
+    /**
+     * Configure the base url for the client.
+     *
+     * Note: When passing a URI object, the object will be merged with the default URI options.
+     * If you wish to remove the default options, pass `null` as the value for the property.
+     */
+    url?: URIComponent;
+    /**
+     * The query string to use in the request.
+     */
+    params?: SearchParams;
+
+    headers?: UrbexHeaders;
+}
+
+export type SafeParsedClientConfiguration = Omit<
+    ParsedClientConfiguration,
+    "headers"
+> & {
+    headers: Record<string, string>;
+};

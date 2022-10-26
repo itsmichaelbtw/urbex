@@ -2,7 +2,7 @@ import type {
     URIOptions,
     URIComponent,
     URLProtocol,
-    UrbexURL,
+    ConfigurableClientUrl,
     SearchParams
 } from "./types";
 
@@ -123,7 +123,7 @@ export function convertURIComponentToString(input: URLStringBuilder): string {
 }
 
 export function uriParser(
-    uri: UrbexURL,
+    uri: ConfigurableClientUrl,
     params: SearchParams = null,
     allowEndpoints: boolean = true
 ): URIComponent {
@@ -146,7 +146,7 @@ export function uriParser(
             };
         } else {
             throw new Error(
-                "An invalid URL was provided. A valid URL string must be passed when using `urbex.configure()`."
+                "An invalid URL was provided. A valid URL string in the format of <scheme>://<hostname> must be passed when using `urbex.configure()`."
             );
         }
     } else if (isObject(uri)) {
