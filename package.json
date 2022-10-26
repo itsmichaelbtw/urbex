@@ -29,11 +29,13 @@
   },
   "homepage": "https://github.com/orison-networks/urbex#readme",
   "keywords": [
-    "HTTP",
+    "http",
     "caching",
     "network",
     "nodejs",
-    "javascript"
+    "javascript",
+    "xhr",
+    "promise"
   ],
   "devDependencies": {
     "@commitlint/cli": "^17.1.2",
