@@ -31,12 +31,22 @@ describe("new Environment", () => {
         chai.assert.strictEqual(environment.isBrowser, false);
     });
 
-    it("current environment should be development", () => {
+    it("current environment should be development", function () {
+        if (environment.isBrowser) {
+            this.skip();
+            return;
+        }
+
         chai.assert.isTrue(environment.isDevelopment);
         chai.assert.isFalse(environment.isProduction);
     });
 
-    it("current environment should be production", () => {
+    it("current environment should be production", function () {
+        if (environment.isBrowser) {
+            this.skip();
+            return;
+        }
+
         env.set("NODE_ENV", "production");
 
         chai.assert.isTrue(environment.isProduction);
