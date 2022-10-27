@@ -25,8 +25,8 @@
   ],
   "scripts": {
     "test": "npm run test:mocha && npm run test:karma",
-    "test:mocha": "mocha --require ts-node/register --recursive test/**/*.test.ts",
-    "test:karma": "karma start karma.config.ts --single-run",
+    "test:mocha": "ts-mocha -p tsconfig.json --recursive test/**/*.test.ts",
+    "test:karma": "karma start karma.config.cjs --single-run",
     "lint:check": "eslint lib --ignore-path .gitignore --ext .ts",
     "lint:fix": "eslint lib --ignore-path .gitignore --ext .ts --fix",
     "prettier:check": "prettier --check .",
@@ -90,6 +90,7 @@
     "standard-version": "^9.5.0",
     "terser": "^5.15.1",
     "ts-loader": "^9.4.1",
+    "ts-mocha": "^10.0.0",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^4.8.3",
     "webpack": "^5.74.0"

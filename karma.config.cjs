@@ -1,9 +1,7 @@
-import type { Config } from "karma";
-
 const testGlob = "test/**/*.test.ts";
 const libGlobal = "lib/**/*.ts";
 
-export default (config: Config) => {
+module.exports = (config) => {
     config.set({
         basePath: "",
         frameworks: ["mocha", "chai", "karma-typescript"],
