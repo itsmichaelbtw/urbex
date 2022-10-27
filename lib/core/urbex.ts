@@ -186,9 +186,7 @@ forEach(["delete", "get", "head", "options"], (_, value: MethodsLower) => {
         url: ConfigurableClientUrl,
         config?: NullableRequestBody
     ) {
-        return this.send(
-            this.createMethodConfig(uppercase(value), url, config)
-        );
+        return this.send(createMethodConfig(uppercase(value), url, config));
     };
 });
 
