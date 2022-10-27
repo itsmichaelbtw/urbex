@@ -18,6 +18,9 @@ const banner = `/**
     */
 `;
 
+const input = "lib/urbex.ts";
+const target = "last 3 years";
+
 async function minifyCode() {
     return {
         name: "terser",
@@ -44,57 +47,78 @@ async function minifyCode() {
     };
 }
 
-export default [
-    {
-        input: "lib/urbex.ts",
-        output: [
-            {
-                file: packageJson.main,
-                format: "cjs",
-                sourcemap: true,
-                exports: "named",
-                generatedCode: {
-                    constBindings: true
-                },
-                banner: banner
-            },
-            {
-                file: packageJson.module,
-                format: "esm",
-                sourcemap: true,
-                exports: "named",
-                banner: banner
-            },
-            {
-                file: `dist/${name}.js`,
-                format: "umd",
-                exports: "named",
-                name: "urbex",
-                globals: {
-                    http: "http",
-                    https: "https",
-                    url: "url",
-                    fs: "fs",
-                    path: "path",
-                    os: "os"
-                },
-                banner: banner
-            }
-        ],
-        plugins: [
-            resolve({ extensions }),
-            json(),
-            commonjs(),
-            babel({
-                babelHelpers: "bundled",
-                include: ["lib/**/*.ts"],
-                extensions: extensions,
-                exclude: "node_modules/**",
-                presets: ["@babel/preset-typescript", "@babel/preset-env"]
-            }),
-            minifyCode(),
-            bundleSize()
-        ],
-        external: ["http", "https", "url"]
-    }
-];
+const create = (config) => ({
+    input: input,
+    output: {
+        ...config.output,
+        banner: banner,
+        sourcemap: true
+    },
+    plugins: [
+        resolve({ extensions, browser: config.browser ?? false }),
+        commonjs(),
+        json(),
+        babel({
+            babelHelpers: "bundled",
+            include: ["lib/**/*.ts"],
+            extensions: extensions,
+            exclude: ["node_modules/**", "test/**"],
+            presets: [
+                [
+                    "@babel/preset-env",
+                    {
+                        targets: config.targets,
+                        modules: false,
+                        loose: true
+                    }
+                ],
+                "@babel/preset-typescript"
+            ]
+        }),
+        minifyCode(),
+        bundleSize()
+    ].concat(config.plugins ?? [])
+});
+
+const cjs = create({
+    output: {
+        file: packageJson.main,
+        format: "cjs",
+        exports: "default",
+        generatedCode: {
+            constBindings: true
+        }
+    },
+    targets: "node > 16"
+});
+
+const esm = create({
+    output: {
+        file: packageJson.module,
+        format: "esm",
+        generatedCode: {
+            constBindings: true
+        },
+        exports: "named"
+    },
+    targets: target
+});
+
+const umd = create({
+    output: {
+        file: `dist/${name}.js`,
+        format: "umd",
+        name: "urbex",
+        exports: "default",
+        globals: {
+            fs: "fs",
+            path: "path",
+            os: "os",
+            http: "http",
+            https: "https"
+        }
+    },
+    targets: target
+});
+
+export default [cjs, esm, umd];
