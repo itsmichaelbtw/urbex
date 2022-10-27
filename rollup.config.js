@@ -106,7 +106,7 @@ const esm = create({
 
 const umd = create({
     output: {
-        file: `dist/${name}.js`,
+        file: `dist/${name}.min.js`,
         format: "umd",
         name: "urbex",
         exports: "default",
