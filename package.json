@@ -2,8 +2,17 @@
   "name": "urbex",
   "version": "1.0.0",
   "description": "A lightweight HTTP client with built in cache support and more",
-  "main": "index.ts",
-  "types": "index.d.ts",
+  "main": "dist/cjs/urbex.min.js",
+  "module": "dist/esm/urbex.min.js",
+  "types": "dist/@types/urbex.d.ts",
+  "files": [
+    "dist",
+    "lib",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md",
+    "package.json"
+  ],
   "scripts": {
     "test": "npm run test:mocha && npm run test:karma",
     "test:mocha": "mocha --require ts-node/register --recursive test/**/*.test.ts",
@@ -12,7 +21,7 @@
     "lint:fix": "eslint lib --ignore-path .gitignore --ext .ts --fix",
     "prettier:check": "prettier --check .",
     "prettier:write": "prettier --write .",
-    "build": "tsc",
+    "build": "rimraf dist && tsc && rollup -c -m rollup.config.js --bundleConfigAsCjs",
     "release:patch": "standard-version --release-as patch",
     "release:minor": "standard-version --release-as minor",
     "release:major": "standard-version --release-as major",
@@ -38,8 +47,15 @@
     "promise"
   ],
   "devDependencies": {
+    "@babel/preset-env": "^7.19.4",
+    "@babel/preset-typescript": "^7.18.6",
     "@commitlint/cli": "^17.1.2",
     "@commitlint/config-conventional": "^17.1.0",
+    "@rollup/plugin-babel": "^6.0.2",
+    "@rollup/plugin-commonjs": "^23.0.2",
+    "@rollup/plugin-json": "^5.0.1",
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "@rollup/plugin-typescript": "^9.0.2",
     "@types/chai": "^4.3.3",
     "@types/karma": "^6.3.3",
     "@types/mocha": "^10.0.0",
@@ -57,7 +73,11 @@
     "lint-staged": "^13.0.3",
     "mocha": "^10.0.0",
     "prettier": "^2.7.1",
+    "rimraf": "^3.0.2",
+    "rollup": "^3.2.3",
+    "rollup-plugin-bundle-size": "^1.0.3",
     "standard-version": "^9.5.0",
+    "terser": "^5.15.1",
     "ts-loader": "^9.4.1",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^4.8.3",
@@ -74,5 +94,8 @@
     ]
   },
   "author": "Orison Networks",
+  "contributors": [
+    "Michael Cizek <itsmichaelbtw@gmail.com>"
+  ],
   "license": "MIT"
 }

@@ -1,20 +1,19 @@
 {
     "compilerOptions": {
         "lib": ["ES2015", "DOM", "ES2015.Iterable", "DOM.Iterable"],
-        "module": "CommonJS",
         "target": "ES2015",
         "moduleResolution": "Node",
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
+        "forceConsistentCasingInFileNames": true,
         "resolveJsonModule": true,
         "allowJs": true,
         "declaration": true,
+        "emitDeclarationOnly": true,
         "skipLibCheck": true,
         "outDir": "dist",
+        "declarationDir": "dist/@types"
     },
     "include": ["./lib"],
-    "exclude": ["**/*.test.ts", "node_modules"],
-    "ts-node": {
-        "esm": true
-    }
+    "exclude": ["test", "node_modules"],
 }
