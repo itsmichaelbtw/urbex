@@ -28,6 +28,14 @@ export class Environment {
         throw new Error("Unable to detect environment context.");
     }
 
+    private nodeStrictCheck(): void {
+        if (this.isBrowser) {
+            throw new Error(
+                "This method is not available in the browser environment."
+            );
+        }
+    }
+
     get context(): UrbexContext {
         return this._context;
     }
@@ -41,10 +49,14 @@ export class Environment {
     }
 
     get isDevelopment(): boolean {
+        this.nodeStrictCheck();
+
         return env.get("NODE_ENV") === "development";
     }
 
     get isProduction(): boolean {
+        this.nodeStrictCheck();
+
         return env.get("NODE_ENV") === "production";
     }
 }
