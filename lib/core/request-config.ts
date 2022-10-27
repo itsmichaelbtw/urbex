@@ -1,10 +1,10 @@
 import type {
-    UrbexClientOptions,
     URLProtocol,
     URIComponent,
-    InternalUrbexConfiguration,
     BaseURIComponent,
-    InternalRequestConfig
+    ParsedClientConfiguration,
+    ConfigurableUrbexClient,
+    SafeParsedClientConfiguration
 } from "./types";
 
 import { UrbexHeaders } from "./headers";
@@ -38,7 +38,7 @@ function determineAppropriateURI() {
         const { protocol, hostname, port } = window.location;
 
         Object.assign(uriOptions, {
-            protocol: protocol.replace(":", "") as URLProtocol,
+            protocol: protocol.replace(":", ""),
             hostname: hostname,
             port: port
         });
@@ -62,12 +62,12 @@ function validateUriComponent(uri: URIComponent) {
 }
 
 export class RequestConfig {
-    private $config: InternalRequestConfig;
+    private $config: ParsedClientConfiguration;
 
-    constructor(config?: UrbexClientOptions) {
+    constructor(config?: ConfigurableUrbexClient) {
         const headers = new UrbexHeaders();
 
-        const cfg: InternalRequestConfig = {
+        const cfg: ParsedClientConfiguration = {
             url: {},
             method: "GET",
             headers: headers,
@@ -94,39 +94,49 @@ export class RequestConfig {
         return validateUriComponent(uri);
     }
 
-    public parseIncomingConfig<T extends UrbexClientOptions>(
+    public parseIncomingConfig<T extends ConfigurableUrbexClient>(
         config: T,
         allowEndpoints: boolean
-    ): T {
+    ): ParsedClientConfiguration {
         if (argumentIsNotProvided(config) || !isObject(config)) {
             throw new Error(
                 "The configuration must be an object with valid properties."
             );
         }
 
-        const cfg: T = clone(config);
+        const parsedConfiguration = merge<T, ParsedClientConfiguration>(
+            config,
+            {
+                headers: UrbexHeaders.construct(config.headers)
+            }
+        );
 
-        if (hasOwnProperty(cfg, "headers")) {
-            cfg.headers = this.$config.headers.normalize(cfg.headers);
+        if (hasOwnProperty(parsedConfiguration, "params")) {
+            parsedConfiguration.params = serializeParams(
+                parsedConfiguration.params,
+                "object"
+            );
         }
 
-        if (
-            (hasOwnProperty(cfg, "params") && isString(cfg.params)) ||
-            cfg.params instanceof URLSearchParams
-        ) {
-            cfg.params = serializeParams(cfg.params, "object");
-        }
-
-        if (hasOwnProperty(cfg, "url")) {
-            if (isObject(cfg.url)) {
-                cfg.url = merge(this.get().url, cfg.url);
+        if (hasOwnProperty(parsedConfiguration, "url")) {
+            if (isObject(parsedConfiguration.url)) {
+                // have to merge otherwise the uri parser may
+                // throw an error if fewer values are provided
+                parsedConfiguration.url = merge(
+                    this.get().url,
+                    parsedConfiguration.url
+                );
             }
 
-            cfg.url = uriParser(cfg.url, cfg.params, allowEndpoints);
+            parsedConfiguration.url = uriParser(
+                parsedConfiguration.url,
+                parsedConfiguration.params,
+                allowEndpoints
+            );
         }
 
-        if (hasOwnProperty(cfg, "method")) {
-            const method = uppercase(cfg.method);
+        if (hasOwnProperty(parsedConfiguration, "method")) {
+            const method = uppercase(parsedConfiguration.method);
 
             if (!METHODS.includes(method)) {
                 throw new Error(
@@ -134,39 +144,65 @@ export class RequestConfig {
                 );
             }
 
-            cfg.method = method;
+            parsedConfiguration.method = method;
         }
 
-        return cfg;
+        return parsedConfiguration;
     }
 
-    public set<T extends UrbexClientOptions>(
-        config: T,
+    public set(
+        config: ConfigurableUrbexClient,
         allowEndpoints: boolean = false
     ): void {
         const cfg = this.parseIncomingConfig(config, allowEndpoints);
 
         if (cfg) {
-            if (hasOwnProperty(cfg, "headers")) {
-                this.$config.headers.set(cfg.headers);
-                delete cfg.headers;
-            }
-
-            this.$config = merge(this.$config, cfg);
+            this.$config = this.merge(cfg);
         }
     }
 
-    public get(): InternalUrbexConfiguration {
-        const headers = this.$config.headers.get();
-        return merge(this.$config, { headers });
+    /**
+     * Convert a parsed configuration into a safe configuration.
+     * This removes any properties that are not safe to expose.
+     *
+     * Returns a JSON object.
+     */
+    public toJSON(
+        config?: ParsedClientConfiguration
+    ): SafeParsedClientConfiguration {
+        if (argumentIsNotProvided(config) || !isObject(config)) {
+            return this.get();
+        }
+
+        const headers = config.headers.get();
+
+        return merge(config, { headers });
+    }
+
+    public get(): SafeParsedClientConfiguration {
+        return this.toJSON(this.$config);
     }
 
     /**
-     * Merge the current configuration with a provided configuration.
+     * Merges a parsed configuration with the current configuration.
      * This does not set the configuration, but rather merges and returns it.
+     *
+     * Returns a new configuration object.
      */
-    public merge(config?: UrbexClientOptions) {
-        return deepMerge(this.get(), config);
+    public merge(
+        config?: ParsedClientConfiguration
+    ): ParsedClientConfiguration {
+        if (argumentIsNotProvided(config) || !isObject(config)) {
+            return this.$config;
+        }
+
+        const currentConfig = this.get();
+        const incomingConfig = this.toJSON(config);
+
+        const merged = deepMerge(currentConfig, incomingConfig);
+        const headersObject = UrbexHeaders.construct(merged.headers);
+
+        return merge(merged, { headers: headersObject });
     }
 
     /**

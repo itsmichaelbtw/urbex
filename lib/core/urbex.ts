@@ -148,34 +148,30 @@ export class UrbexClient extends RequestApi {
     public send(config: ConfigurableUrbexClient = {}): DispatchedResponse {
         // convert to an internal config here
         // https://github.com/orison-networks/urbex/issues/4
-        // if (isString(config.url) && config.url.startsWith("/")) {
-        //     config.url = {
-        //         endpoint: config.url
-        //     };
-        // }
+        if (isString(config.url) && config.url.startsWith("/")) {
+            config.url = {
+                endpoint: config.url
+            };
+        }
 
         // temporary fix for: https://github.com/orison-networks/urbex/issues/6
         // will likely want to merge this with the uriParser if available
-        // const params = merge(
-        //     // @ts-ignore
-        //     this.config.params,
-        //     serializeParams(config.params, "object")
-        // );
+        const params = merge(
+            // @ts-ignore
+            this.config.params,
+            serializeParams(config.params, "object")
+        );
 
-        // const cfg = this.$config.merge(
-        //     this.$config.parseIncomingConfig(
-        //         merge(config, {
-        //             params
-        //         }),
-        //         true
-        //     )
-        // );
+        const cfg = this.$config.merge(
+            this.$config.parseIncomingConfig(
+                merge(config, {
+                    params
+                }),
+                true
+            )
+        );
 
-        // if (hasOwnProperty(cfg, "data")) {
-        // }
-
-        // return this.dispatchRequest(cfg);
-        return this.dispatchRequest({});
+        return this.dispatchRequest(cfg);
     }
 
     /**
