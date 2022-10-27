@@ -19,7 +19,7 @@ const banner = `/**
 `;
 
 const input = "lib/urbex.ts";
-const target = "last 3 years";
+const target = "last 3 years, not dead";
 
 async function minifyCode() {
     return {
@@ -51,8 +51,7 @@ const create = (config) => ({
     input: input,
     output: {
         ...config.output,
-        banner: banner,
-        sourcemap: true
+        banner: banner
     },
     plugins: [
         resolve({ extensions, browser: config.browser ?? false }),
@@ -68,8 +67,7 @@ const create = (config) => ({
                     "@babel/preset-env",
                     {
                         targets: config.targets,
-                        modules: false,
-                        loose: true
+                        modules: "auto"
                     }
                 ],
                 "@babel/preset-typescript"
@@ -84,12 +82,12 @@ const cjs = create({
     output: {
         file: packageJson.main,
         format: "cjs",
-        exports: "default",
+        exports: "named",
         generatedCode: {
             constBindings: true
         }
     },
-    targets: "node > 16"
+    targets: "node > 14"
 });
 
 const esm = create({
@@ -99,7 +97,7 @@ const esm = create({
         generatedCode: {
             constBindings: true
         },
-        exports: "named"
+        exports: "default"
     },
     targets: target
 });
@@ -121,4 +119,4 @@ const umd = create({
     targets: target
 });
 
-export default [cjs, esm, umd];
+export default [umd, cjs, esm];
