@@ -1,4 +1,3 @@
-import { environment } from "../urbex";
 import { isUndefined, isNegative, absolute, merge } from "../utils";
 import { timeProvider } from "./time-provider";
 import { CacheClock } from "./cache-clock";

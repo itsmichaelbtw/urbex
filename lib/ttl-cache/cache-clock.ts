@@ -1,4 +1,4 @@
-import { environment } from "../urbex";
+import { environment } from "../environment";
 
 type Timeout = null | ReturnType<typeof setTimeout>;
 type ClockMap = Map<string, ClockItem>;

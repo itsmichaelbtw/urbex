@@ -1,4 +1,4 @@
-import { environment } from "../urbex";
+import { environment } from "../environment";
 
 interface TimeProvider {
     now(): number;
