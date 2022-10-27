@@ -15,7 +15,7 @@ export type DispatchedResponse = Promise<UrbexResponse>;
 
 export interface UrbexResponse {
     data: any;
-    headers: BaseUrbexHeaders;
+    headers: any;
     status: number;
     statusText: string;
     request: any;
