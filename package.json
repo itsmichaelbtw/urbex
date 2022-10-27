@@ -2,11 +2,19 @@
   "name": "urbex",
   "version": "1.0.0",
   "description": "A lightweight HTTP client with built in cache support and more",
-  "main": "dist/cjs/urbex.min.js",
+  "main": "dist/cjs/urbex.min.cjs",
   "module": "dist/esm/urbex.min.js",
-  "types": "dist/@types/urbex.d.ts",
   "unpkg": "dist/urbex.min.js",
   "jsdelivr": "dist/urbex.min.js",
+  "types": "dist/@types/urbex.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/urbex.min.js",
+      "require": "./dist/cjs/urbex.min.cjs",
+      "default": "./dist/esm/urbex.min.js"
+    }
+  },
   "files": [
     "dist",
     "lib",
@@ -23,7 +31,8 @@
     "lint:fix": "eslint lib --ignore-path .gitignore --ext .ts --fix",
     "prettier:check": "prettier --check .",
     "prettier:write": "prettier --write .",
-    "build": "rimraf dist && tsc && rollup -c -m rollup.config.js --bundleConfigAsCjs",
+    "clean:dist": "rimraf dist",
+    "build": "npm run clean:dist && tsc && rollup -c -m rollup.config.js --bundleConfigAsCjs",
     "release:patch": "standard-version --release-as patch",
     "release:minor": "standard-version --release-as minor",
     "release:major": "standard-version --release-as major",
