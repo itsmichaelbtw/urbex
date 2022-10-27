@@ -43,6 +43,6 @@ function createClient(): IUrbexClient {
 
 const urbex = createClient();
 
-export default urbex;
-
 export * from "./core/types";
+
+export default urbex;
