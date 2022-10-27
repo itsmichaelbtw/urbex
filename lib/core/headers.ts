@@ -165,7 +165,7 @@ export class UrbexHeaders {
         this.$headers = {};
 
         if (!empty) {
-            this.set(DefaultHeaders);
+            this.set(DefaultHeaders, false);
         }
     }
 
