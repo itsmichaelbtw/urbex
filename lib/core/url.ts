@@ -106,7 +106,7 @@ export function convertURIComponentToString(input: URLStringBuilder): string {
     forEach(input, (key, value) => {
         const regex = createRegexString(key);
 
-        if (argumentIsNotProvided(value)) {
+        if (argumentIsNotProvided(value) || isEmpty(value)) {
             template = stringReplacer(template, regex, "");
         } else {
             const match = extractMatchFromRegExp(template, regex, 0, "");
