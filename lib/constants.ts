@@ -1,8 +1,5 @@
 import type { Methods } from "./types";
 
-export const DOTENV_FILENAME = ".env";
-export const DOTENV_LINE = new RegExp(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
-
 // support for any protocols to be used with the uri component
 // currently only http and https are supported
 
