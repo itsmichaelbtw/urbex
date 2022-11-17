@@ -10,7 +10,8 @@ import {
     isEmpty
 } from "../utils";
 import { debug } from "../debug";
-import { environment, env } from "../environment";
+import { environment } from "../environment";
+import { DEFAULT_HEADERS } from "./constants";
 
 // refactor types at a later date
 type UrbexHeaderValues = string | number | boolean | null | undefined;
@@ -19,10 +20,6 @@ type NormalizedHeaders = Record<string, string>;
 type ArrayHeaders = Array<[string, UrbexHeaderValues]>;
 
 export type BaseUrbexHeaders = ObjectHeaders;
-
-const DefaultHeaders = {
-    "Content-Type": "application/json"
-};
 
 function parseHeaderKey(key: string): string {
     if (key) {
@@ -74,32 +71,33 @@ function formatHeaderKey(key: string): string {
 export class UrbexHeaders {
     protected $headers: NormalizedHeaders = {};
 
-    constructor(headers?: BaseUrbexHeaders, fromConstruction: boolean = false) {
-        if (!fromConstruction) {
+    constructor(headers?: BaseUrbexHeaders, withDefaults: boolean = true) {
+        if (withDefaults) {
             if (environment.isNode) {
                 this.set(
-                    merge(DefaultHeaders, {
+                    merge(DEFAULT_HEADERS, {
                         "User-Agent": `UrbexClient (Node.js ${process.version}; ${process.platform})`
                     })
                 );
-
-                return;
+            } else {
+                this.set(DEFAULT_HEADERS, false);
             }
-
-            this.set(DefaultHeaders, false);
         }
 
         if (isObject(headers) && !isEmpty(headers)) {
-            this.set(headers, !fromConstruction);
+            this.set(headers, withDefaults);
         }
     }
 
-    static construct(headers: BaseUrbexHeaders): UrbexHeaders {
-        return new UrbexHeaders(headers, true);
+    static construct(
+        headers: BaseUrbexHeaders = {},
+        withDefaults: boolean = true
+    ): UrbexHeaders {
+        return new UrbexHeaders(headers, withDefaults);
     }
 
-    get defaults(): typeof DefaultHeaders {
-        return DefaultHeaders;
+    get defaults(): typeof DEFAULT_HEADERS {
+        return DEFAULT_HEADERS;
     }
 
     /**
@@ -165,7 +163,7 @@ export class UrbexHeaders {
         this.$headers = {};
 
         if (!empty) {
-            this.set(DefaultHeaders, false);
+            this.set(DEFAULT_HEADERS, false);
         }
     }
 

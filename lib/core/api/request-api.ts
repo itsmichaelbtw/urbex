@@ -1,4 +1,4 @@
-import type { UrbexContext } from "../../environment/environment";
+import type { UrbexContext } from "../../environment";
 import type {
     DispatchedResponse,
     ParsedClientConfiguration,

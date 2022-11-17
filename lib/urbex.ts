@@ -1,6 +1,6 @@
-import { ConfigurableUrbexClient } from "./core/types";
+import type { ConfigurableUrbexClient } from "./core/types";
 
-import { environment, Environment, env } from "./environment";
+import { environment, Environment } from "./environment";
 import { UrbexClient, isUrbexClient } from "./core/urbex";
 
 interface IUrbexClient extends UrbexClient {
