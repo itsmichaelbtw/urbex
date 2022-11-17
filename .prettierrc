@@ -4,5 +4,5 @@
     "bracketSameLine": false,
     "trailingComma": "none",
     "endOfLine": "crlf",
-    "printWidth": 80
+    "printWidth": 100
 }
