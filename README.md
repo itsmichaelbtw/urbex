@@ -1,3 +1,5 @@
+## :construction: Currently under rapid development - v1.0.0 only supports NodeJS requests with responseType as text.
+
 # urbex
 
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/orison-networks/urbex/Unit%20Tests?color=79b473&label=unit%20tests&style=flat-square)
