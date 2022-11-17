@@ -4,6 +4,7 @@ import type {
     BaseURIComponent,
     ParsedClientConfiguration,
     ConfigurableUrbexClient,
+    ParsableRequestConfig,
     SafeParsedClientConfiguration
 } from "./types";
 
@@ -24,6 +25,7 @@ import {
 } from "../utils";
 import { isValidURL, serializeParams, uriParser } from "./url";
 import { PROTOCOL_REGEXP, HOSTNAME_REGEXP, METHODS } from "../constants";
+import { DEFAULT_CLIENT_OPTIONS } from "./constants";
 
 function determineAppropriateURI() {
     const uriOptions: BaseURIComponent = {
@@ -65,26 +67,24 @@ export class RequestConfig {
     private $config: ParsedClientConfiguration;
 
     constructor(config?: ConfigurableUrbexClient) {
-        const headers = new UrbexHeaders();
-
-        const cfg: ParsedClientConfiguration = {
-            url: {},
-            method: "GET",
-            headers: headers,
-            data: null,
-            timeout: 0
-        };
-
         const uriComponent = uriParser(determineAppropriateURI());
 
-        this.$config = merge(cfg, { url: uriComponent });
+        this.$config = merge(DEFAULT_CLIENT_OPTIONS, {
+            url: uriComponent,
+            headers: new UrbexHeaders()
+        });
 
         if (isObject(config) && !isEmpty(config)) {
             this.set(config);
         }
     }
 
-    private defaultConfig() {}
+    public defaultConfig(): ParsedClientConfiguration {
+        return merge(DEFAULT_CLIENT_OPTIONS, {
+            url: uriParser(determineAppropriateURI()),
+            headers: new UrbexHeaders()
+        });
+    }
 
     public validateURIComponent(uri: URIComponent): URIComponent {
         if (argumentIsNotProvided(uri)) {
@@ -97,46 +97,38 @@ export class RequestConfig {
     public parseIncomingConfig<T extends ConfigurableUrbexClient>(
         config: T,
         allowEndpoints: boolean
-    ): ParsedClientConfiguration {
+    ): ParsableRequestConfig {
         if (argumentIsNotProvided(config) || !isObject(config)) {
             throw new Error(
                 "The configuration must be an object with valid properties."
             );
         }
 
-        const parsedConfiguration = merge<T, ParsedClientConfiguration>(
-            config,
-            {
-                headers: UrbexHeaders.construct(config.headers)
-            }
-        );
+        const configuration = clone(config);
 
-        if (hasOwnProperty(parsedConfiguration, "params")) {
-            parsedConfiguration.params = serializeParams(
-                parsedConfiguration.params,
+        if (hasOwnProperty(configuration, "params")) {
+            configuration.params = serializeParams(
+                configuration.params,
                 "object"
             );
         }
 
-        if (hasOwnProperty(parsedConfiguration, "url")) {
-            if (isObject(parsedConfiguration.url)) {
+        if (hasOwnProperty(configuration, "url")) {
+            if (isObject(configuration.url)) {
                 // have to merge otherwise the uri parser may
                 // throw an error if fewer values are provided
-                parsedConfiguration.url = merge(
-                    this.get().url,
-                    parsedConfiguration.url
-                );
+                configuration.url = merge(this.get().url, configuration.url);
             }
 
-            parsedConfiguration.url = uriParser(
-                parsedConfiguration.url,
-                parsedConfiguration.params,
+            configuration.url = uriParser(
+                configuration.url,
+                configuration.params,
                 allowEndpoints
             );
         }
 
-        if (hasOwnProperty(parsedConfiguration, "method")) {
-            const method = uppercase(parsedConfiguration.method);
+        if (hasOwnProperty(configuration, "method")) {
+            const method = uppercase(configuration.method);
 
             if (!METHODS.includes(method)) {
                 throw new Error(
@@ -144,21 +136,27 @@ export class RequestConfig {
                 );
             }
 
-            parsedConfiguration.method = method;
+            configuration.method = method;
         }
 
-        return parsedConfiguration;
+        const headers = UrbexHeaders.construct(configuration.headers, true);
+        delete configuration.headers;
+
+        return merge<T, ParsableRequestConfig>(configuration, {
+            headers: headers
+        });
     }
 
-    public set(
-        config: ConfigurableUrbexClient,
+    public set<T extends ConfigurableUrbexClient>(
+        config: T,
         allowEndpoints: boolean = false
-    ): void {
-        const cfg = this.parseIncomingConfig(config, allowEndpoints);
+    ): ParsedClientConfiguration {
+        const configuration = this.parseIncomingConfig(config, allowEndpoints);
+        const merged = this.merge(configuration);
 
-        if (cfg) {
-            this.$config = this.merge(cfg);
-        }
+        this.$config = merged;
+
+        return merged;
     }
 
     /**
@@ -183,24 +181,20 @@ export class RequestConfig {
         return this.toJSON(this.$config);
     }
 
-    /**
-     * Merges a parsed configuration with the current configuration.
-     * This does not set the configuration, but rather merges and returns it.
-     *
-     * Returns a new configuration object.
-     */
-    public merge(
-        config?: ParsedClientConfiguration
-    ): ParsedClientConfiguration {
+    public merge(config?: ParsableRequestConfig): ParsedClientConfiguration {
         if (argumentIsNotProvided(config) || !isObject(config)) {
             return this.$config;
         }
 
         const currentConfig = this.get();
-        const incomingConfig = this.toJSON(config);
+        const incomingHeaders = config.headers.get();
 
-        const merged = deepMerge(currentConfig, incomingConfig);
-        const headersObject = UrbexHeaders.construct(merged.headers);
+        const mergedHeaders = merge(currentConfig.headers, incomingHeaders);
+
+        delete config.headers;
+
+        const merged = deepMerge(currentConfig, config);
+        const headersObject = UrbexHeaders.construct(mergedHeaders);
 
         return merge(merged, { headers: headersObject });
     }
