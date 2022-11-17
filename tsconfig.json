@@ -12,7 +12,7 @@
         "emitDeclarationOnly": true,
         "skipLibCheck": true,
         "outDir": "dist",
-        "declarationDir": "dist/@types",
+        "declarationDir": "dist/types",
     },
     "include": ["./lib"],
     "exclude": ["test", "node_modules"]
