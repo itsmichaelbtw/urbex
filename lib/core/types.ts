@@ -1,6 +1,7 @@
+import type { ClockOptions } from "cache-clock";
+
 import type { RequestUrlPath, Methods } from "../types";
 import type { BaseUrbexHeaders, UrbexHeaders } from "./headers";
-import type { CacheOptions } from "../ttl-cache/ttl-cache";
 
 export type URIOptions = any;
 export type URLProtocol = "http" | "https";
@@ -10,8 +11,10 @@ export type SearchParams =
     | string
     | null;
 export type UrbexURL = BaseURIComponent | RequestUrlPath;
-
 export type DispatchedResponse = Promise<UrbexResponse>;
+export type ParsableRequestConfig = Partial<ParsedClientConfiguration> & {
+    headers: UrbexHeaders;
+};
 
 export interface UrbexResponse {
     data: any;
@@ -19,6 +22,18 @@ export interface UrbexResponse {
     status: number;
     statusText: string;
     request: any;
+}
+
+type RequestExecutor = (
+    config: ParsedClientConfiguration
+) => Promise<ParsedClientConfiguration>;
+type ResponseExecutor = (
+    config: UrbexResponse
+) => Promise<ParsedClientConfiguration>;
+
+export interface PipelineExecutorsManager {
+    request?: RequestExecutor[];
+    response?: ResponseExecutor[];
 }
 
 /**
@@ -35,7 +50,7 @@ export interface BaseURIComponent {
      *
      * Defaults to `https://`.
      */
-    protocol?: URLProtocol;
+    protocol: URLProtocol;
     /**
      * The hostname name to use. If the hostname is not specified, the current domain
      * will be used. If `environment.isNode` is `true`, then localhost is used.
@@ -45,7 +60,7 @@ export interface BaseURIComponent {
      * E.g. if
      * the hostname is `https://api.example.com/api/v1`, then the hostname will be `api.example.com`.
      */
-    hostname?: string;
+    hostname: string;
     /**
      * If you are making a request that has an api mounted at a different url path, you
      * can set it here. This is designed to remove the cumbersome task of specifying the full
@@ -59,34 +74,34 @@ export interface BaseURIComponent {
      *
      * Defaults to `/api`.
      */
-    urlMount?: string | null;
+    urlMount: string | null;
     /**
      *
      * The endpoint to use. This is the path that will be appended to the hostname, and after the
      * urlMount, if one is present.
      */
-    endpoint?: string;
+    endpoint: string;
     /**
      * The port to use.
      *
      * If you do not require this functionality, default it to `null` or `undefined` within the global
      * configuration.
      */
-    port?: number | string | null;
+    port: number | string | null;
 }
 export interface URIComponent extends BaseURIComponent {
     /**
      * The full url of the request that was passed to the client.
      */
-    href?: string;
+    href: string;
     /**
      * The origin of the url.
      */
-    origin?: string;
+    origin: string;
     /**
      * The query string to use in the request.
      */
-    params?: SearchParams;
+    params: SearchParams;
 }
 
 interface BaseConfiguration {
@@ -100,38 +115,42 @@ interface BaseConfiguration {
      *
      * Defaults to "GET".
      */
-    method?: Methods;
+    method: Methods;
     /**
      * Set the default headers to use for all requests.
      *
      * Any additional headers passed to the request will not be merged
      * with the default headers.
      */
-    headers?: BaseUrbexHeaders;
+    headers: BaseUrbexHeaders;
     /**
      * Set the default data to use.
      *
      * Any additional data passed to the request will not be merged
      * with the default data.
      */
-    data?: any;
+    data: any;
     /**
      * Set the default timeout to use for all requests.
      *
      * Defaults to 0 (no timeout).
      */
-    timeout?: number;
+    timeout: number;
     /**
      * Control the internal ttl cache module. Provide a `ttl` value to enable the cache.
      */
-    cache?: CacheOptions | false;
+    cache: ClockOptions;
+    /**
+     * Custom pipeline transformers to use.
+     */
+    pipelines: PipelineExecutorsManager;
 }
 
 // strictly for external use only by the user
 
-export type ConfigurableClientUrl = BaseURIComponent | RequestUrlPath;
+export type ConfigurableClientUrl = Partial<BaseURIComponent> | RequestUrlPath;
 
-export interface ConfigurableUrbexClient extends BaseConfiguration {
+export interface ConfigurableUrbexClient extends Partial<BaseConfiguration> {
     /**
      * Configure the base url for the client.
      *
@@ -153,13 +172,13 @@ export interface ParsedClientConfiguration extends Omit<BaseConfiguration, "head
      * Note: When passing a URI object, the object will be merged with the default URI options.
      * If you wish to remove the default options, pass `null` as the value for the property.
      */
-    url?: URIComponent;
+    url: URIComponent;
     /**
      * The query string to use in the request.
      */
-    params?: SearchParams;
+    params: SearchParams;
 
-    headers?: UrbexHeaders;
+    headers: UrbexHeaders;
 }
 
 export type SafeParsedClientConfiguration = Omit<
