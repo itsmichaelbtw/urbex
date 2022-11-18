@@ -5,11 +5,7 @@ import type { BaseUrbexHeaders, UrbexHeaders } from "./headers";
 
 export type URIOptions = any;
 export type URLProtocol = "http" | "https";
-export type SearchParams =
-    | URLSearchParams
-    | Record<string, any>
-    | string
-    | null;
+export type SearchParams = URLSearchParams | Record<string, any> | string | null;
 export type UrbexURL = BaseURIComponent | RequestUrlPath;
 export type DispatchedResponse = Promise<UrbexResponse>;
 export type ParsableRequestConfig = Partial<ParsedClientConfiguration> & {
@@ -24,12 +20,8 @@ export interface UrbexResponse {
     request: any;
 }
 
-type RequestExecutor = (
-    config: ParsedClientConfiguration
-) => Promise<ParsedClientConfiguration>;
-type ResponseExecutor = (
-    config: UrbexResponse
-) => Promise<ParsedClientConfiguration>;
+type RequestExecutor = (config: ParsedClientConfiguration) => Promise<ParsedClientConfiguration>;
+type ResponseExecutor = (config: UrbexResponse) => Promise<UrbexResponse>;
 
 export interface PipelineExecutorsManager {
     request?: RequestExecutor[];
@@ -50,7 +42,7 @@ export interface BaseURIComponent {
      *
      * Defaults to `https://`.
      */
-    protocol: URLProtocol;
+    protocol: string;
     /**
      * The hostname name to use. If the hostname is not specified, the current domain
      * will be used. If `environment.isNode` is `true`, then localhost is used.
@@ -88,6 +80,10 @@ export interface BaseURIComponent {
      * configuration.
      */
     port: number | string | null;
+    /**
+     * The query string to use in the request.
+     */
+    params: SearchParams;
 }
 export interface URIComponent extends BaseURIComponent {
     /**
@@ -98,10 +94,6 @@ export interface URIComponent extends BaseURIComponent {
      * The origin of the url.
      */
     origin: string;
-    /**
-     * The query string to use in the request.
-     */
-    params: SearchParams;
 }
 
 interface BaseConfiguration {
@@ -158,10 +150,6 @@ export interface ConfigurableUrbexClient extends Partial<BaseConfiguration> {
      * If you wish to remove the default options, pass `null` as the value for the property.
      */
     url?: ConfigurableClientUrl;
-    /**
-     * The query string to use in the request.
-     */
-    params?: SearchParams;
 }
 
 // prettier-ignore
@@ -173,17 +161,10 @@ export interface ParsedClientConfiguration extends Omit<BaseConfiguration, "head
      * If you wish to remove the default options, pass `null` as the value for the property.
      */
     url: URIComponent;
-    /**
-     * The query string to use in the request.
-     */
-    params: SearchParams;
 
     headers: UrbexHeaders;
 }
 
-export type SafeParsedClientConfiguration = Omit<
-    ParsedClientConfiguration,
-    "headers"
-> & {
+export type SafeParsedClientConfiguration = Omit<ParsedClientConfiguration, "headers"> & {
     headers: Record<string, string>;
 };
