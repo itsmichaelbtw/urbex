@@ -26,13 +26,11 @@ import {
     isFunction,
     isEmpty
 } from "../utils";
-
-export type URLStringBuilder = Pick<
-    URIOptions,
-    "protocol" | "hostname" | "port" | "urlMount" | "endpoint" | "params"
->;
+import { DEFAULT_URI_COMPONENT } from "./constants";
 
 export type ParamSerializerType = "string" | "object" | "URLSearchParams";
+
+export type URIParserModifier = (uri: URIComponent) => URIComponent;
 
 /**
  * Test if a url string has a valid protocol.
@@ -65,10 +63,7 @@ export function isValidURL(url: string): boolean {
     }
 }
 
-export function convertStringToURIComponent(
-    input: string,
-    urlMount: string = ""
-): URIComponent {
+export function convertStringToURIComponent(input: string, urlMount: string = ""): URIComponent {
     const url = new URL(input);
 
     const protocol = stringReplacer(url.protocol, ":", "") as URLProtocol;
@@ -88,19 +83,19 @@ export function convertStringToURIComponent(
 }
 
 // turn this into its own package
-export function convertURIComponentToString(input: URLStringBuilder): string {
-    let template =
-        "{protocol+://}{hostname}{:+port}{urlMount}{endpoint}{?+params}";
+export function convertURIComponentToString(input: Partial<URIComponent>): string {
+    let template = "{protocol+://}{hostname}{:+port}{urlMount}{endpoint}{?+params}";
 
     function createRegexString(word: string): RegExp {
-        return new RegExp(
-            `${URI_TEMPLATE_REGEXP_LEFT}${word}${URI_TEMPLATE_REGEXP_RIGHT}`,
-            "gi"
-        );
+        return new RegExp(`${URI_TEMPLATE_REGEXP_LEFT}${word}${URI_TEMPLATE_REGEXP_RIGHT}`, "gi");
     }
 
     if (argumentIsNotProvided(input) || isEmpty(input) || !isObject(input)) {
         return "";
+    }
+
+    if (input.params) {
+        input.params = serializeParams(input.params);
     }
 
     forEach(input, (key, value) => {
@@ -122,55 +117,46 @@ export function convertURIComponentToString(input: URLStringBuilder): string {
     return template;
 }
 
-export function uriParser(
-    uri: ConfigurableClientUrl,
-    params: SearchParams = null,
+export function parseURIIntoComponent(
+    component: ConfigurableClientUrl,
     allowEndpoints: boolean = true
-): URIComponent {
-    const serializedParams = serializeParams(params, "string") as string;
-
-    if (isString(uri)) {
-        if (isValidURL(uri)) {
-            return convertStringToURIComponent(
-                combineStrings("?", uri, serializedParams)
-            );
+): Partial<URIComponent> {
+    if (isString(component)) {
+        if (isValidURL(component)) {
+            return convertStringToURIComponent(component);
         } else if (allowEndpoints) {
-            // fix: will need to change the url.href to update the endpoint provided
-            // as it is out of sync
-            // a temporary fix currently is in core/urbex.ts function send()
-            // at a later date remodel the uri parser to fix this issue
-            // https://github.com/orison-networks/urbex/issues/4
             return {
-                endpoint: ensureLeadingSlash(uri),
-                params: serializedParams
+                endpoint: ensureLeadingSlash(component)
             };
         } else {
             throw new Error(
                 "An invalid URL was provided. A valid URL string in the format of <scheme>://<hostname> must be passed when using `urbex.configure()`."
             );
         }
-    } else if (isObject(uri)) {
-        // prettier-ignore
-        const protocol = extractMatchFromRegExp(uri.protocol, PROTOCOL_REGEXP, 0, "http") as URLProtocol;
-        // prettier-ignore
-        const hostname = stringReplacer(uri.hostname, new RegExp(`^${protocol}://`, "gi"), "");
+    } else if (isObject(component)) {
+        const protocol = extractMatchFromRegExp(component.protocol, PROTOCOL_REGEXP, 0, "http");
+        const hostname = stringReplacer(
+            component.hostname,
+            new RegExp(`^${protocol}://`, "gi"),
+            ""
+        );
 
-        const componentToBuild: URLStringBuilder = {
+        const buildableComponent = {
             protocol: protocol,
             hostname: hostname,
-            port: uri.port,
-            urlMount: uri.urlMount,
-            endpoint: uri.endpoint,
-            params: serializedParams
+            port: component.port,
+            urlMount: component.urlMount,
+            endpoint: component.endpoint,
+            params: component.params
         };
 
-        const uriToString = convertURIComponentToString(componentToBuild);
-        return convertStringToURIComponent(uriToString, uri.urlMount);
-    }
+        const componentAsString = convertURIComponentToString(buildableComponent);
+        const newComponent = convertStringToURIComponent(componentAsString, component.urlMount);
 
-    throw new Error(
-        "Unable to parse the provided URI. Must be either a string or an object."
-    );
+        return newComponent;
+    } else {
+        throw new Error("Unable to parse the provided URI. Must be either a string or an object.");
+    }
 }
 
 export function serializeParams(
