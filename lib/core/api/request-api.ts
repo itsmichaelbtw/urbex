@@ -1,21 +1,14 @@
+import { CacheClock } from "cache-clock";
+
 import type { UrbexContext } from "../../environment";
-import type {
-    DispatchedResponse,
-    ParsedClientConfiguration,
-    UrbexRequestApi
-} from "../types";
+import type { InternalConfiguration } from "../../exportable-types";
+import type { DispatchedResponse, UrbexRequestApi } from "../../types";
 
 import { NodeRequest } from "./http";
 import { BrowserRequest } from "./xhr";
 import { environment } from "../../environment";
 import { UrbexHeaders } from "../headers";
-import {
-    createPromise,
-    replaceObjectProperty,
-    isEmpty,
-    isObject,
-    merge
-} from "../../utils";
+import { createPromise, replaceObjectProperty, isEmpty, isObject, merge } from "../../utils";
 import { convertURIComponentToString } from "../url";
 
 // here all of the interceptors are checked
@@ -23,14 +16,26 @@ import { convertURIComponentToString } from "../url";
 // the response is created here
 
 export class RequestApi {
-    protected $api: UrbexRequestApi = null;
+    /**
+     * The internal api that is used to send requests.
+     */
+    protected $api: UrbexRequestApi;
+    /**
+     * An isolated cache module that is used to cache requests.
+     */
+    protected $cache: CacheClock;
 
     constructor() {
         this.register(environment.context);
+
+        this.$cache = new CacheClock({
+            autoStart: false,
+            debug: false
+        });
     }
 
     private register(context: UrbexContext) {
-        if (context === "browser" && typeof XMLHttpRequest !== "undefined") {
+        if (context === "browser") {
             this.$api = new BrowserRequest();
             return;
         }
@@ -45,9 +50,9 @@ export class RequestApi {
         );
     }
 
-    protected async dispatchRequest(
-        config: ParsedClientConfiguration
-    ): DispatchedResponse {
+    protected async dispatchRequest(config: InternalConfiguration): DispatchedResponse {
+        console.log(config);
+
         return this.$api.send(config);
     }
 }

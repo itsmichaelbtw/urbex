@@ -1,3 +1,5 @@
+import type { Headers, HeaderValues, NormalizedHeaders } from "../types";
+
 import {
     isArray,
     isObject,
@@ -13,14 +15,6 @@ import { debug } from "../debug";
 import { environment } from "../environment";
 import { DEFAULT_HEADERS } from "./constants";
 
-// refactor types at a later date
-type UrbexHeaderValues = string | number | boolean | null | undefined;
-type ObjectHeaders = Record<string, UrbexHeaderValues>;
-type NormalizedHeaders = Record<string, string>;
-type ArrayHeaders = Array<[string, UrbexHeaderValues]>;
-
-export type BaseUrbexHeaders = ObjectHeaders;
-
 function parseHeaderKey(key: string): string {
     if (key) {
         return formatHeaderKey(key.toLowerCase()).trim();
@@ -29,7 +23,7 @@ function parseHeaderKey(key: string): string {
     return undefined;
 }
 
-function parseHeaderValue(value: UrbexHeaderValues): string {
+function parseHeaderValue(value: HeaderValues): string {
     if (isUndefined(value) || value === false || value === null) {
         return undefined;
     }
@@ -45,7 +39,7 @@ function parseHeaderValue(value: UrbexHeaderValues): string {
     return String(value);
 }
 
-function normalizeHeaders(headers: BaseUrbexHeaders): NormalizedHeaders {
+function normalizeHeaders(headers: Headers): NormalizedHeaders {
     const newHeaders: NormalizedHeaders = {};
 
     forEach(headers, (key, value) => {
@@ -71,7 +65,7 @@ function formatHeaderKey(key: string): string {
 export class UrbexHeaders {
     protected $headers: NormalizedHeaders = {};
 
-    constructor(headers?: BaseUrbexHeaders, withDefaults: boolean = true) {
+    constructor(headers?: Headers, withDefaults: boolean = true) {
         if (withDefaults) {
             if (environment.isNode) {
                 this.set(
@@ -89,10 +83,7 @@ export class UrbexHeaders {
         }
     }
 
-    static construct(
-        headers: BaseUrbexHeaders = {},
-        withDefaults: boolean = true
-    ): UrbexHeaders {
+    static construct(headers: Headers = {}, withDefaults: boolean = true): UrbexHeaders {
         return new UrbexHeaders(headers, withDefaults);
     }
 
@@ -110,22 +101,14 @@ export class UrbexHeaders {
      * @param headers The headers to set
      * @param forceMerge Whether to merge the headers with the existing configuration
      */
-    public set(
-        headers?: BaseUrbexHeaders,
-        forceMerge: boolean = true
-    ): BaseUrbexHeaders {
+    public set(headers?: Headers, forceMerge: boolean = true): Headers {
         if (!isObject(headers)) {
-            debug(
-                "error",
-                `Attempted to set headers with a non-object value: ${typeof headers}`
-            );
+            debug("error", `Attempted to set headers with a non-object value: ${typeof headers}`);
             return headers;
         }
 
         const normalizedHeaders = this.normalize(headers);
-        const merged = forceMerge
-            ? merge(this.$headers, normalizedHeaders)
-            : normalizedHeaders;
+        const merged = forceMerge ? merge(this.$headers, normalizedHeaders) : normalizedHeaders;
 
         return (this.$headers = merged);
     }
@@ -171,7 +154,7 @@ export class UrbexHeaders {
      * Normalize an incoming headers object
      */
 
-    public normalize(headers: BaseUrbexHeaders): NormalizedHeaders {
+    public normalize(headers: Headers): NormalizedHeaders {
         if (argumentIsNotProvided(headers) || !isObject(headers)) {
             return {};
         }

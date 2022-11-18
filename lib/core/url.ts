@@ -1,10 +1,5 @@
-import type {
-    URIOptions,
-    URIComponent,
-    URLProtocol,
-    ConfigurableClientUrl,
-    SearchParams
-} from "./types";
+import type { UrbexURL, URIComponent } from "../exportable-types";
+import type { SearchParams } from "../types";
 
 import {
     URL_REGEXP,
@@ -29,8 +24,6 @@ import {
 import { DEFAULT_URI_COMPONENT } from "./constants";
 
 export type ParamSerializerType = "string" | "object" | "URLSearchParams";
-
-export type URIParserModifier = (uri: URIComponent) => URIComponent;
 
 /**
  * Test if a url string has a valid protocol.
@@ -66,7 +59,7 @@ export function isValidURL(url: string): boolean {
 export function convertStringToURIComponent(input: string, urlMount: string = ""): URIComponent {
     const url = new URL(input);
 
-    const protocol = stringReplacer(url.protocol, ":", "") as URLProtocol;
+    const protocol = stringReplacer(url.protocol, ":", "") as string;
     const port = url.port ? parseInt(url.port) : "";
     const pathname = stringReplacer(url.pathname, urlMount, "");
 
@@ -118,7 +111,7 @@ export function convertURIComponentToString(input: Partial<URIComponent>): strin
 }
 
 export function parseURIIntoComponent(
-    component: ConfigurableClientUrl,
+    component: UrbexURL,
     allowEndpoints: boolean = true
 ): Partial<URIComponent> {
     if (isString(component)) {
@@ -141,14 +134,10 @@ export function parseURIIntoComponent(
             ""
         );
 
-        const buildableComponent = {
+        const buildableComponent = merge(component, {
             protocol: protocol,
-            hostname: hostname,
-            port: component.port,
-            urlMount: component.urlMount,
-            endpoint: component.endpoint,
-            params: component.params
-        };
+            hostname: hostname
+        });
 
         const componentAsString = convertURIComponentToString(buildableComponent);
         const newComponent = convertStringToURIComponent(componentAsString, component.urlMount);

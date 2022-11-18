@@ -1,8 +1,6 @@
 import type { IObject } from "./types";
 
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
-    k: infer I
-) => void
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
     ? I
     : never;
 
@@ -14,7 +12,7 @@ export function toStringCall(value: any): string {
     return lowercase(string.substring(8, string.length - 1));
 }
 
-export function hasOwnProperty<X extends IObject, Y extends PropertyKey>(
+export function hasOwnProperty<X extends {}, Y extends PropertyKey>(
     obj: X,
     prop: Y
 ): obj is X & Record<Y, unknown> {
@@ -95,9 +93,7 @@ export function merge<P = any, T = any>(defaultOptions: P, options: T): P & T {
     return Object.assign({}, defaultOptions, options);
 }
 
-export function deepMerge<T extends IObject[]>(
-    ...objects: T
-): UnionToIntersection<T[any]> {
+export function deepMerge<T extends IObject[]>(...objects: T): UnionToIntersection<T[any]> {
     return objects.reduce((acc, obj) => {
         if (isArray(obj)) {
             return acc.concat(obj);
@@ -129,10 +125,7 @@ export function values<T extends IObject>(obj: T): T[keyof T][] {
  * Iterate over an object or array.
  */
 
-export function forEach<T>(
-    obj: T,
-    fn: (key: keyof T, value: T[keyof T], obj: T) => void
-): void {
+export function forEach<T>(obj: T, fn: (key: keyof T, value: T[keyof T], obj: T) => void): void {
     if (isUndefined(obj)) {
         return;
     }
@@ -165,11 +158,7 @@ export function extractMatchFromRegExp(
     return defaultValue;
 }
 
-export function startsWithReplacer(
-    value: string,
-    search: string,
-    replace: string
-): string {
+export function startsWithReplacer(value: string, search: string, replace: string): string {
     if (value.startsWith(search)) {
         return value.replace(search, replace);
     }
@@ -177,11 +166,7 @@ export function startsWithReplacer(
     return value;
 }
 
-export function stringReplacer(
-    value: string,
-    search: string | RegExp,
-    replace: string
-): string {
+export function stringReplacer(value: string, search: string | RegExp, replace: string): string {
     return value.replace(search, replace);
 }
 
@@ -202,18 +187,12 @@ export function argumentIsNotProvided(value: unknown): boolean {
 }
 
 export function createPromise<T>(
-    executor: (
-        resolve: (value?: T) => void,
-        reject: (reason?: any) => void
-    ) => void
+    executor: (resolve: (value?: T) => void, reject: (reason?: any) => void) => void
 ): Promise<T> {
     return new Promise<T>(executor);
 }
 
-export function combineStrings(
-    delimiter: string = "",
-    ...strings: string[]
-): string {
+export function combineStrings(delimiter: string = "", ...strings: string[]): string {
     return strings.filter((string) => !isEmpty(string)).join(delimiter);
 }
 

@@ -1,13 +1,10 @@
-import type {
-    DispatchedResponse,
-    UrbexRequestApi,
-    ParsedClientConfiguration
-} from "../types";
+import type { InternalConfiguration } from "../../exportable-types";
+import type { DispatchedResponse, UrbexRequestApi } from "../../types";
 
 import { createPromise } from "../../utils";
 
 export class BrowserRequest implements UrbexRequestApi {
-    public send(config: ParsedClientConfiguration): DispatchedResponse {
+    public send(config: InternalConfiguration): DispatchedResponse {
         return createPromise(() => {});
     }
 }

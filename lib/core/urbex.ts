@@ -1,17 +1,13 @@
+import type { CacheClock } from "cache-clock";
 import type {
     Methods,
     MethodsLower,
     MethodsUpper,
-    RequestUrlPath
-} from "../types";
-import type {
-    URIComponent,
+    RequestUrlPath,
     DispatchedResponse,
-    ConfigurableClientUrl,
-    ConfigurableUrbexClient,
-    ParsedClientConfiguration,
-    SafeParsedClientConfiguration
-} from "./types";
+    PipelineExecutorsManager
+} from "../types";
+import type { UrbexURL, UrbexConfig, InternalConfiguration } from "../exportable-types";
 
 import { RequestApi } from "./api/request-api";
 import { RequestConfig } from "./request-config";
@@ -28,77 +24,46 @@ import {
     ensureLeadingSlash,
     forEach,
     isUndefined,
-    uppercase
+    uppercase,
+    isEmpty
 } from "../utils";
-import {
-    convertStringToURIComponent,
-    convertURIComponentToString,
-    serializeParams
-} from "./url";
+import { convertURIComponentToString, serializeParams } from "./url";
 import { METHODS } from "../constants";
 
-type NullableRequestBody = Omit<ConfigurableUrbexClient, "data" | "url">;
+type UrbexDirectRequest = Omit<UrbexConfig, "data" | "url" | "cache">;
 
 export interface UrbexClient {
     /**
      * Send a GET request.
      */
-    get(
-        url: ConfigurableClientUrl,
-        config?: NullableRequestBody
-    ): DispatchedResponse;
+    get(url: UrbexURL, config?: UrbexDirectRequest): DispatchedResponse;
     /**
      * Send a POST request.
      */
-    post(
-        url: ConfigurableClientUrl,
-        data?: any,
-        config?: NullableRequestBody
-    ): DispatchedResponse;
+    post(url: UrbexURL, data?: any, config?: UrbexDirectRequest): DispatchedResponse;
     /**
      * Send a PUT request.
      */
-    put(
-        url: ConfigurableClientUrl,
-        data?: any,
-        config?: NullableRequestBody
-    ): DispatchedResponse;
+    put(url: UrbexURL, data?: any, config?: UrbexDirectRequest): DispatchedResponse;
     /**
      * Send a PATCH request.
      */
-    patch(
-        url: ConfigurableClientUrl,
-        data?: any,
-        config?: NullableRequestBody
-    ): DispatchedResponse;
+    patch(url: UrbexURL, data?: any, config?: UrbexDirectRequest): DispatchedResponse;
     /**
      * Send a DELETE request.
      */
-    delete(
-        url: ConfigurableClientUrl,
-        config?: NullableRequestBody
-    ): DispatchedResponse;
+    delete(url: UrbexURL, config?: UrbexDirectRequest): DispatchedResponse;
     /**
      * Send a HEAD request.
      */
-    head(
-        url: ConfigurableClientUrl,
-        config?: NullableRequestBody
-    ): DispatchedResponse;
+    head(url: UrbexURL, config?: UrbexDirectRequest): DispatchedResponse;
     /**
      * Send a OPTIONS request.
      */
-    options(
-        url: ConfigurableClientUrl,
-        config?: NullableRequestBody
-    ): DispatchedResponse;
+    options(url: UrbexURL, config?: UrbexDirectRequest): DispatchedResponse;
 }
 
-function createMethodConfig(
-    method: Methods,
-    uri: ConfigurableClientUrl,
-    config: ConfigurableUrbexClient
-): ConfigurableUrbexClient {
+function createMethodConfig(method: Methods, uri: UrbexURL, config: UrbexConfig): UrbexConfig {
     if (argumentIsNotProvided(uri)) {
         throw new Error(
             "Attempted to call a HTTP method without providing a URL. If you want to use the default URL, use `urbex.send` instead."
@@ -108,16 +73,14 @@ function createMethodConfig(
     return merge(config, { url: uri, method: method });
 }
 
-// function convertRequestPayload(data: any) {
-//     if ()
-// }
-
 export class UrbexClient extends RequestApi {
     private $config: RequestConfig;
-    private $interceptors = {};
-    private $subscriptions = {};
+    private $pipelines: PipelineExecutorsManager = {
+        request: [],
+        response: []
+    };
 
-    constructor(config?: ConfigurableUrbexClient) {
+    constructor(config?: UrbexConfig) {
         super();
 
         this.$config = new RequestConfig(config);
@@ -127,12 +90,22 @@ export class UrbexClient extends RequestApi {
      *
      * Creates a new instance of the UrbexClient.
      */
-    static create(config?: ConfigurableUrbexClient): UrbexClient {
+    static create(config?: UrbexConfig): UrbexClient {
         return new UrbexClient(config);
     }
 
-    get config(): SafeParsedClientConfiguration {
+    /**
+     * Current, and most up-to-date configuration of the UrbexClient.
+     */
+    get config(): InternalConfiguration {
         return this.$config.get();
+    }
+
+    /**
+     * The internal cache module.
+     */
+    get cache(): CacheClock {
+        return this.$cache;
     }
 
     /**
@@ -141,76 +114,80 @@ export class UrbexClient extends RequestApi {
      *
      * @param config The configuration to use.
      */
-    public configure(config: ConfigurableUrbexClient): void {
-        this.$config.set(config, false);
-    }
+    public configure(config: UrbexConfig): void {
+        const configuration = this.$config.createConfigurationObject(config, false);
+        this.$config.set(configuration);
 
-    public send(config: ConfigurableUrbexClient = {}): DispatchedResponse {
-        // convert to an internal config here
-        // https://github.com/orison-networks/urbex/issues/4
-        if (isString(config.url) && config.url.startsWith("/")) {
-            config.url = {
-                endpoint: config.url
-            };
+        if (isEmpty(configuration.cache)) {
+            if (this.$cache) {
+                this.$cache.clear();
+
+                if (this.$cache.isRunning) {
+                    this.$cache.stop();
+                }
+            }
+        } else {
+            this.$cache.configure(configuration.cache);
+
+            if (!this.$cache.isRunning) {
+                this.$cache.start();
+            }
         }
-
-        // temporary fix for: https://github.com/orison-networks/urbex/issues/6
-        // will likely want to merge this with the uriParser if available
-        const params = merge(
-            // @ts-ignore
-            this.config.params,
-            serializeParams(config.params, "object")
-        );
-
-        const cfg = this.$config.merge(
-            this.$config.parseIncomingConfig(
-                merge(config, {
-                    params
-                }),
-                true
-            )
-        );
-
-        return this.dispatchRequest(cfg);
     }
+
+    public send(config: UrbexConfig = {}): DispatchedResponse {
+        const configuration = this.$config.parseIncomingConfig(config, true);
+        const merged = this.$config.merge(configuration);
+
+        return this.dispatchRequest(merged);
+    }
+
+    /**
+     * Inject pipelines into the UrbexClient. This allows you to add custom logic to the request/response
+     */
+    public injectPipeline(): void {}
+
+    /**
+     * Eject a pipeline from the UrbexClient.
+     */
+    public ejectPipeline(): void {}
 
     /**
      * When a response is received, the UrbexClient will actively push out the response to all active
      * subscriptions
      */
     public subscribe() {}
+
+    public unsubscribe(): void {}
 }
 
 forEach(["delete", "get", "head", "options"], (_, value: MethodsLower) => {
-    UrbexClient.prototype[value] = function (
-        url: ConfigurableClientUrl,
-        config?: NullableRequestBody
-    ) {
+    UrbexClient.prototype[value] = function (url: UrbexURL, config?: UrbexDirectRequest) {
         return this.send(createMethodConfig(uppercase(value), url, config));
     };
 });
 
 forEach(["post", "put", "patch"], (_, value: MethodsLower) => {
     UrbexClient.prototype[value] = function (
-        url: ConfigurableClientUrl,
+        url: UrbexURL,
         data?: any,
-        config?: NullableRequestBody
+        config?: UrbexDirectRequest
     ) {
-        function combineIncomingConfig(): ConfigurableUrbexClient {
-            if (!isUndefined(data)) {
-                if (isObject(config)) {
-                    return merge(config, { data: data });
-                } else {
-                    return { data };
-                }
+        function combineIncomingConfig(): UrbexConfig {
+            if (isUndefined(data)) {
+                return data;
             }
 
-            return config;
+            if (isObject(config)) {
+                return merge(config, { data: data });
+            } else {
+                return { data };
+            }
         }
 
-        const cfg = combineIncomingConfig();
+        const configuration = combineIncomingConfig();
 
-        return this.send(createMethodConfig(uppercase(value), url, cfg));
+        return this.send(createMethodConfig(uppercase(value), url, configuration));
     };
 });
 

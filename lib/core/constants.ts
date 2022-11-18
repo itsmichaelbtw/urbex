@@ -1,4 +1,5 @@
-import type { ParsedClientConfiguration, URIComponent, PipelineExecutorsManager } from "./types";
+import type { InternalConfiguration, URIComponent } from "../exportable-types";
+import type { PipelineExecutorsManager } from "../types";
 
 import { merge } from "../utils";
 
@@ -22,7 +23,7 @@ export const DEFAULT_PIPELINE_EXECUTORS: PipelineExecutorsManager = {
     response: []
 };
 
-export const DEFAULT_CLIENT_OPTIONS: ParsedClientConfiguration = {
+export const DEFAULT_CLIENT_OPTIONS: InternalConfiguration = {
     url: merge(DEFAULT_URI_COMPONENT, {
         protocol: "http",
         urlMount: "/api"

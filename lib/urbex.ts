@@ -1,9 +1,10 @@
-import type { ConfigurableUrbexClient } from "./core/types";
+import type { UrbexConfig } from "./exportable-types";
 
 import { environment, Environment } from "./environment";
 import { UrbexClient, isUrbexClient } from "./core/urbex";
+import { PipelineExecutor } from "./core/pipelines";
 
-interface IUrbexClient extends UrbexClient {
+interface ExtendedUrbexClient extends UrbexClient {
     /**
      * Create a new isolated instance of the Urbex client
      *
@@ -11,7 +12,7 @@ interface IUrbexClient extends UrbexClient {
      * instance. Furthermore, changes made to the new instance
      * will not affect the original instance
      */
-    isolateClient(config?: ConfigurableUrbexClient): UrbexClient;
+    isolateClient(config?: UrbexConfig): UrbexClient;
     /**
      *
      * TypeScript safe guard to check if an object is an instance of UrbexClient
@@ -29,9 +30,9 @@ interface IUrbexClient extends UrbexClient {
     environment: Environment;
 }
 
-function createClient(): IUrbexClient {
+function createClient(): ExtendedUrbexClient {
     const client = UrbexClient.create();
-    const extendedClient = client as IUrbexClient;
+    const extendedClient = client as ExtendedUrbexClient;
 
     extendedClient.isolateClient = UrbexClient.create;
     extendedClient.environment = environment;
@@ -43,6 +44,6 @@ function createClient(): IUrbexClient {
 
 const urbex = createClient();
 
-export * from "./core/types";
+export * from "./exportable-types";
 
 export default urbex;

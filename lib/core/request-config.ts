@@ -1,14 +1,4 @@
-import type {
-    URLProtocol,
-    URIComponent,
-    BaseURIComponent,
-    ParsedClientConfiguration,
-    ConfigurableUrbexClient,
-    ParsableRequestConfig,
-    SafeParsedClientConfiguration,
-    ConfigurableClientUrl
-} from "./types";
-import type { URIParserModifier } from "./url";
+import type { InternalConfiguration, UrbexConfig, URIComponent } from "../exportable-types";
 
 import { UrbexHeaders } from "./headers";
 import { environment } from "../environment";
@@ -27,45 +17,41 @@ import {
 } from "../utils";
 import { isValidURL, serializeParams, parseURIIntoComponent } from "./url";
 import { PROTOCOL_REGEXP, HOSTNAME_REGEXP, METHODS } from "../constants";
-import { DEFAULT_CLIENT_OPTIONS } from "./constants";
+import { DEFAULT_CLIENT_OPTIONS, DEFAULT_URI_COMPONENT } from "./constants";
 
-function determineAppropriateURI() {
-    const uriOptions: BaseURIComponent = {
+function determineAppropriateURI(): URIComponent {
+    const component = merge(DEFAULT_URI_COMPONENT, {
         protocol: "https",
-        hostname: null,
-        urlMount: "/api",
-        endpoint: null,
-        port: null,
-        params: null
-    };
+        urlMount: "/api"
+    });
 
     if (environment.isBrowser) {
         const { protocol, hostname, port } = window.location;
 
-        Object.assign(uriOptions, {
+        Object.assign(component, {
             protocol: protocol.replace(":", ""),
             hostname: hostname,
             port: port
         });
     } else if (environment.isNode) {
-        Object.assign(uriOptions, {
+        Object.assign(component, {
             protocol: "http",
             hostname: "localhost",
             port: 3000
         });
     }
 
-    return uriOptions;
+    return component;
 }
 
 export class RequestConfig {
-    private $config: ParsedClientConfiguration;
+    private $config: InternalConfiguration;
 
-    constructor(config?: ConfigurableUrbexClient) {
-        const uriComponent = parseURIIntoComponent(determineAppropriateURI());
+    constructor(config?: UrbexConfig) {
+        const component = parseURIIntoComponent(determineAppropriateURI());
 
         this.$config = merge(DEFAULT_CLIENT_OPTIONS, {
-            url: uriComponent,
+            url: component,
             headers: new UrbexHeaders()
         });
 
@@ -73,12 +59,12 @@ export class RequestConfig {
             this.set(this.createConfigurationObject(config, true));
         }
 
-        this.$config.pipelines.request.unshift((config) => {
-            return Promise.resolve(config);
-        });
+        // this.$config.pipelines.request.unshift((config) => {
+        //     return Promise.resolve(config);
+        // });
     }
 
-    public defaultConfig(): ParsedClientConfiguration {
+    public defaultConfig(): InternalConfiguration {
         return merge(DEFAULT_CLIENT_OPTIONS, {
             url: parseURIIntoComponent(determineAppropriateURI()),
             headers: new UrbexHeaders()
@@ -86,19 +72,19 @@ export class RequestConfig {
     }
 
     public createConfigurationObject(
-        config: ConfigurableUrbexClient,
+        config: UrbexConfig,
         allowEndpoints: boolean
-    ): ParsedClientConfiguration {
+    ): InternalConfiguration {
         const parsed = this.parseIncomingConfig(config, allowEndpoints);
         const merged = this.merge(parsed);
 
         return merged;
     }
 
-    public parseIncomingConfig<T extends ConfigurableUrbexClient>(
-        config: T,
+    public parseIncomingConfig(
+        config: UrbexConfig,
         allowEndpoints: boolean
-    ): ParsableRequestConfig {
+    ): Partial<InternalConfiguration> {
         if (argumentIsNotProvided(config) || !isObject(config)) {
             throw new Error("The configuration must be an object with valid properties.");
         }
@@ -137,23 +123,25 @@ export class RequestConfig {
         const headers = UrbexHeaders.construct(configuration.headers, true);
         delete configuration.headers;
 
-        return merge<T, ParsableRequestConfig>(configuration, {
+        return merge<UrbexConfig>(configuration, {
             headers: headers
         });
     }
 
-    public set(config: ParsedClientConfiguration): ParsedClientConfiguration {
+    public set(config: InternalConfiguration): InternalConfiguration {
         this.$config = config;
         return config;
     }
 
-    public merge(config?: ParsableRequestConfig): ParsedClientConfiguration {
+    public merge(
+        config?: InternalConfiguration | Partial<InternalConfiguration>
+    ): InternalConfiguration {
         if (argumentIsNotProvided(config) || !isObject(config)) {
-            return this.$config;
+            return this.get();
         }
 
         const currentConfig = this.get();
-        const incomingHeaders = config.headers.get();
+        const incomingHeaders = config.headers?.get() ?? {};
 
         const mergedHeaders = merge(currentConfig.headers, incomingHeaders);
 
@@ -165,24 +153,8 @@ export class RequestConfig {
         return merge(merged, { headers: headersObject });
     }
 
-    public get(): SafeParsedClientConfiguration {
-        return this.toJSON(this.$config);
-    }
-
-    /**
-     * Convert a parsed configuration into a safe configuration.
-     * This removes any properties that are not safe to expose.
-     *
-     * Returns a JSON object.
-     */
-    public toJSON(config?: ParsedClientConfiguration): SafeParsedClientConfiguration {
-        if (argumentIsNotProvided(config) || !isObject(config)) {
-            return this.get();
-        }
-
-        const headers = config.headers.get();
-
-        return merge(config, { headers });
+    public get(): InternalConfiguration {
+        return this.$config;
     }
 
     /**
