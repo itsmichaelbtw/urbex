@@ -1,4 +1,4 @@
-import type { ParsedClientConfiguration, URIComponent } from "./types";
+import type { ParsedClientConfiguration, URIComponent, PipelineExecutorsManager } from "./types";
 
 import { merge } from "../utils";
 
@@ -17,6 +17,11 @@ export const DEFAULT_URI_COMPONENT: URIComponent = {
     urlMount: null
 };
 
+export const DEFAULT_PIPELINE_EXECUTORS: PipelineExecutorsManager = {
+    request: [],
+    response: []
+};
+
 export const DEFAULT_CLIENT_OPTIONS: ParsedClientConfiguration = {
     url: merge(DEFAULT_URI_COMPONENT, {
         protocol: "http",
@@ -26,10 +31,6 @@ export const DEFAULT_CLIENT_OPTIONS: ParsedClientConfiguration = {
     method: "GET",
     headers: null,
     data: null,
-    params: null,
     cache: {},
-    pipelines: {
-        request: [],
-        response: []
-    }
+    pipelines: DEFAULT_PIPELINE_EXECUTORS
 };
