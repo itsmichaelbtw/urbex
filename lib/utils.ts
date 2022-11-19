@@ -170,26 +170,32 @@ export function stringReplacer(value: string, search: string | RegExp, replace: 
     return value.replace(search, replace);
 }
 
-export function ensureLeadingSlash(value: string): string {
+export function ensureLeadingToken(token: string, value: string): string {
     if (argumentIsNotProvided(value)) {
         return "";
     }
 
-    if (value.startsWith("/")) {
+    if (value.startsWith(token)) {
         return value;
     }
 
-    return `/${value}`;
+    return `${token}${value}`;
+}
+
+export function ensureTrailingToken(token: string, value: string): string {
+    if (argumentIsNotProvided(value)) {
+        return "";
+    }
+
+    if (value.endsWith(token)) {
+        return value;
+    }
+
+    return `${value}${token}`;
 }
 
 export function argumentIsNotProvided(value: unknown): boolean {
     return value === undefined || value === null;
-}
-
-export function createPromise<T>(
-    executor: (resolve: (value?: T) => void, reject: (reason?: any) => void) => void
-): Promise<T> {
-    return new Promise<T>(executor);
 }
 
 export function combineStrings(delimiter: string = "", ...strings: string[]): string {
@@ -210,4 +216,25 @@ export function safeStringify(value: any): string {
     } catch (error) {
         return "";
     }
+}
+
+export function createEmptyScheme<T>(keys: string[]): T {
+    return keys.reduce((acc, key) => {
+        const keys = key.split(".");
+
+        if (keys.length === 1) {
+            acc[key] = null;
+        } else {
+            const [object, ...nestedKeys] = keys;
+
+            if (!acc[object]) {
+                acc[object] = {};
+            }
+
+            const nestedObject = createEmptyScheme(nestedKeys);
+            acc[object] = merge(acc[object], nestedObject);
+        }
+
+        return acc;
+    }, {} as T);
 }
