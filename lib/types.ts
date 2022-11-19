@@ -11,6 +11,15 @@ import type {
 } from "./exportable-types";
 
 /**
+ * The response that is returned by the request api.
+ */
+export interface RequestAPIResponse {
+    data?: any;
+    request?: any;
+    response?: any;
+}
+
+/**
  * An type representing an object.
  */
 export interface IObject<V = any> {
@@ -54,6 +63,11 @@ export interface PipelineExecutorsManager {
 export type DispatchedResponse = Promise<UrbexResponse>;
 
 /**
+ * The resolved callback when the request api has been made.
+ */
+export type DispatchedAPIRequest = Promise<RequestAPIResponse>;
+
+/**
  * The base configuration object.
  */
 export interface BaseConfiguration<D = any> {
@@ -87,17 +101,26 @@ export interface BaseConfiguration<D = any> {
      * See the [cache-clock](https://github.com/itsmichaelbtw/cache-clock)
      * documentation for more information.
      */
-    cache: ClockOptions;
+    cache: ClockOptions & {
+        /**
+         * Whether or not to enable the cache.
+         */
+        enabled?: boolean;
+    };
     /**
      * Custom pipeline transformers to use. These are executed in the order
      * they are provided and on each request.
      */
     pipelines: PipelineExecutorsManager;
+    /**
+     * The max content length to allow for the response.
+     */
+    maxContentLength: number;
 }
 
 /**
  * The underlying request api that powers the client.
  */
 export interface UrbexRequestApi {
-    send(config: InternalConfiguration): DispatchedResponse;
+    send(config: InternalConfiguration): DispatchedAPIRequest;
 }

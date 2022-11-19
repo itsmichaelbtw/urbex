@@ -11,8 +11,8 @@ import type { UrbexURL, UrbexConfig, InternalConfiguration } from "../exportable
 
 import { RequestApi } from "./api/request-api";
 import { RequestConfig } from "./request-config";
+import { UrbexError } from "./error";
 import {
-    createPromise,
     deepMerge,
     merge,
     clone,
@@ -21,46 +21,44 @@ import {
     argumentIsNotProvided,
     hasOwnProperty,
     stringReplacer,
-    ensureLeadingSlash,
     forEach,
     isUndefined,
     uppercase,
     isEmpty
 } from "../utils";
-import { convertURIComponentToString, serializeParams } from "./url";
-import { METHODS } from "../constants";
 
 type UrbexDirectRequest = Omit<UrbexConfig, "data" | "url" | "cache">;
+type UrbexMethodRequest = Omit<UrbexDirectRequest, "method">;
 
 export interface UrbexClient {
     /**
      * Send a GET request.
      */
-    get(url: UrbexURL, config?: UrbexDirectRequest): DispatchedResponse;
+    get(url: UrbexURL, config?: UrbexMethodRequest): DispatchedResponse;
     /**
      * Send a POST request.
      */
-    post(url: UrbexURL, data?: any, config?: UrbexDirectRequest): DispatchedResponse;
+    post(url: UrbexURL, data?: any, config?: UrbexMethodRequest): DispatchedResponse;
     /**
      * Send a PUT request.
      */
-    put(url: UrbexURL, data?: any, config?: UrbexDirectRequest): DispatchedResponse;
+    put(url: UrbexURL, data?: any, config?: UrbexMethodRequest): DispatchedResponse;
     /**
      * Send a PATCH request.
      */
-    patch(url: UrbexURL, data?: any, config?: UrbexDirectRequest): DispatchedResponse;
+    patch(url: UrbexURL, data?: any, config?: UrbexMethodRequest): DispatchedResponse;
     /**
      * Send a DELETE request.
      */
-    delete(url: UrbexURL, config?: UrbexDirectRequest): DispatchedResponse;
+    delete(url: UrbexURL, config?: UrbexMethodRequest): DispatchedResponse;
     /**
      * Send a HEAD request.
      */
-    head(url: UrbexURL, config?: UrbexDirectRequest): DispatchedResponse;
+    head(url: UrbexURL, config?: UrbexMethodRequest): DispatchedResponse;
     /**
      * Send a OPTIONS request.
      */
-    options(url: UrbexURL, config?: UrbexDirectRequest): DispatchedResponse;
+    options(url: UrbexURL, config?: UrbexMethodRequest): DispatchedResponse;
 }
 
 function createMethodConfig(method: Methods, uri: UrbexURL, config: UrbexConfig): UrbexConfig {
@@ -116,6 +114,9 @@ export class UrbexClient extends RequestApi {
      */
     public configure(config: UrbexConfig): void {
         const configuration = this.$config.createConfigurationObject(config, false);
+
+        console.log(configuration);
+
         this.$config.set(configuration);
 
         if (isEmpty(configuration.cache)) {
@@ -162,7 +163,7 @@ export class UrbexClient extends RequestApi {
 }
 
 forEach(["delete", "get", "head", "options"], (_, value: MethodsLower) => {
-    UrbexClient.prototype[value] = function (url: UrbexURL, config?: UrbexDirectRequest) {
+    UrbexClient.prototype[value] = function (url: UrbexURL, config?: UrbexMethodRequest) {
         return this.send(createMethodConfig(uppercase(value), url, config));
     };
 });
@@ -171,7 +172,7 @@ forEach(["post", "put", "patch"], (_, value: MethodsLower) => {
     UrbexClient.prototype[value] = function (
         url: UrbexURL,
         data?: any,
-        config?: UrbexDirectRequest
+        config?: UrbexMethodRequest
     ) {
         function combineIncomingConfig(): UrbexConfig {
             if (isUndefined(data)) {
