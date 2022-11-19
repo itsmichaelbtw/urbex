@@ -1,22 +1,22 @@
-import type { InternalConfiguration, URIComponent } from "../exportable-types";
+import type { InternalConfiguration, URIComponent, UrbexResponse } from "../exportable-types";
 import type { PipelineExecutorsManager } from "../types";
 
-import { merge } from "../utils";
+import { merge, createEmptyScheme } from "../utils";
 
 export const DEFAULT_HEADERS = {
     "Content-Type": "application/json"
 };
 
-export const DEFAULT_URI_COMPONENT: URIComponent = {
-    endpoint: null,
-    hostname: null,
-    href: null,
-    origin: null,
-    params: null,
-    port: null,
-    protocol: null,
-    urlMount: null
-};
+export const DEFAULT_URI_COMPONENT = createEmptyScheme<URIComponent>([
+    "endpoint",
+    "hostname",
+    "href",
+    "origin",
+    "params",
+    "port",
+    "protocol",
+    "urlMount"
+]);
 
 export const DEFAULT_PIPELINE_EXECUTORS: PipelineExecutorsManager = {
     request: [],
@@ -33,5 +33,22 @@ export const DEFAULT_CLIENT_OPTIONS: InternalConfiguration = {
     headers: null,
     data: null,
     cache: {},
-    pipelines: DEFAULT_PIPELINE_EXECUTORS
+    pipelines: DEFAULT_PIPELINE_EXECUTORS,
+    maxContentLength: Infinity
 };
+
+export const DEFAULT_URBEX_RESPONSE = createEmptyScheme<UrbexResponse>([
+    "status",
+    "statusText",
+    "headers",
+    "data",
+    "config",
+    "request",
+    "response",
+    "duration",
+    "timestamp",
+    "cache.key",
+    "cache.hit",
+    "cache.pulled",
+    "cache.stored"
+]);
