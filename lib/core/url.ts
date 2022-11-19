@@ -12,7 +12,7 @@ import {
     isObject,
     isString,
     extractMatchFromRegExp,
-    ensureLeadingSlash,
+    ensureLeadingToken,
     stringReplacer,
     argumentIsNotProvided,
     combineStrings,
@@ -119,7 +119,7 @@ export function parseURIIntoComponent(
             return convertStringToURIComponent(component);
         } else if (allowEndpoints) {
             return {
-                endpoint: ensureLeadingSlash(component)
+                endpoint: ensureLeadingToken("/", component)
             };
         } else {
             throw new Error(
@@ -134,13 +134,18 @@ export function parseURIIntoComponent(
             ""
         );
 
+        const endpoint = ensureLeadingToken("/", component.endpoint);
+        const urlMount = ensureLeadingToken("/", component.urlMount);
+
         const buildableComponent = merge(component, {
             protocol: protocol,
-            hostname: hostname
+            hostname: hostname,
+            endpoint: endpoint,
+            urlMount: urlMount
         });
 
         const componentAsString = convertURIComponentToString(buildableComponent);
-        const newComponent = convertStringToURIComponent(componentAsString, component.urlMount);
+        const newComponent = convertStringToURIComponent(componentAsString, urlMount);
 
         return newComponent;
     } else {
