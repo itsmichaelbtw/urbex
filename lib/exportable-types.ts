@@ -1,7 +1,7 @@
 import type { ClockOptions } from "cache-clock";
 
 import type { UrbexHeaders } from "./core/headers";
-import type { BaseConfiguration, SearchParams, Headers } from "./types";
+import type { BaseConfiguration, SearchParams, Headers, NormalizedHeaders } from "./types";
 
 /**
  * The callback to provide when creating a new pipeline executor for a request.
@@ -55,11 +55,65 @@ export type InternalConfiguration<D = any> = BaseConfiguration<D> & {
  * The response object returned by the `urbex` client when a request is successful.
  */
 export interface UrbexResponse<D = any> {
-    data: D;
-    headers: any;
+    /**
+     * The status code of the response.
+     */
     status: number;
+    /**
+     * The status text of the response.
+     */
     statusText: string;
+    /**
+     * The headers of the response.
+     */
+    headers: any;
+    /**
+     * The data of the response.
+     */
+    data: D;
+    /**
+     * The request configuration that was used to make the request.
+     */
+    config: InternalConfiguration;
+    /**
+     * The request that was made.
+     */
     request: any;
+    /**
+     * The response that was received.
+     */
+    response: any;
+    /**
+     * The time it took to make the request in `ms`.
+     *
+     * Uses `Date.now()` to calculate the time.
+     */
+    duration: number;
+    /**
+     * The time the request was made as an ISO string.
+     */
+    timestamp: string;
+    /**
+     * An object indicating its interaction with the cache.
+     */
+    cache: {
+        /**
+         * The key that was used to pull the response from the cache.
+         */
+        key: string;
+        /**
+         * If the cache was hit during the request.
+         */
+        hit: boolean;
+        /**
+         * If the request had an active response in the cache.
+         */
+        pulled: boolean;
+        /**
+         * If the `NEW` response was stored in the cache.
+         */
+        stored: boolean;
+    };
 }
 
 /**
@@ -121,4 +175,30 @@ export interface URIComponent {
      * The query string to use in the request.
      */
     params: SearchParams;
+}
+
+/**
+ * The base error class that gets thrown when a request fails.
+ */
+export interface UrbexErrorType {
+    /**
+     * The status of the error.
+     */
+    status: number;
+    /**
+     * The config object that was used to make the request.
+     */
+    config: InternalConfiguration;
+    /**
+     * The request object that was used to make the request.
+     */
+    request: any;
+    /**
+     * The response object that was returned from the request.
+     */
+    response: UrbexResponse;
+    /**
+     * The error message.
+     */
+    message: string;
 }
