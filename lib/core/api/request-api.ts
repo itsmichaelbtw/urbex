@@ -1,15 +1,16 @@
 import { CacheClock } from "cache-clock";
 
 import type { UrbexContext } from "../../environment";
-import type { InternalConfiguration } from "../../exportable-types";
+import type { InternalConfiguration, UrbexResponse } from "../../exportable-types";
 import type { DispatchedResponse, UrbexRequestApi } from "../../types";
 
 import { NodeRequest } from "./http";
 import { BrowserRequest } from "./xhr";
+import { startRequest } from "./conclude";
 import { environment } from "../../environment";
+import { UrbexError } from "../error";
 import { UrbexHeaders } from "../headers";
-import { createPromise, replaceObjectProperty, isEmpty, isObject, merge } from "../../utils";
-import { convertURIComponentToString } from "../url";
+import { clone } from "../../utils";
 
 // here all of the interceptors are checked
 // cache clocks are checked here
@@ -51,8 +52,53 @@ export class RequestApi {
     }
 
     protected async dispatchRequest(config: InternalConfiguration): DispatchedResponse {
-        console.log(config);
+        try {
+            const configuration = clone(config);
+            const concludeRequest = startRequest(configuration);
 
-        return this.$api.send(config);
+            // for some odd reason, result.cache had this weird mutation
+            // issue even when CLONING the result, so I had to do this
+            // to get it to work properly
+
+            const cache: UrbexResponse["cache"] = {
+                key: null,
+                hit: false,
+                pulled: false,
+                stored: false
+            };
+
+            if (configuration.cache && configuration.cache.enabled) {
+                const cacheKey = this.$cache.getCacheKey(configuration.url.href);
+                const entity = this.$cache.get(cacheKey, true);
+
+                cache.hit = true;
+
+                if (entity) {
+                    const result = await concludeRequest({ data: entity.v });
+
+                    cache.key = cacheKey;
+                    cache.pulled = true;
+                    result.cache = cache;
+
+                    return Promise.resolve(result);
+                }
+            }
+
+            const response = await this.$api.send(configuration);
+            const result = await concludeRequest(response);
+
+            if (configuration.cache && configuration.cache.enabled) {
+                this.$cache.set(configuration.url.href, response.data);
+
+                cache.key = this.$cache.getCacheKey(configuration.url.href);
+                cache.stored = true;
+            }
+
+            result.cache = cache;
+
+            return Promise.resolve(result);
+        } catch (error: any) {
+            return Promise.reject(new UrbexError(error));
+        }
     }
 }
