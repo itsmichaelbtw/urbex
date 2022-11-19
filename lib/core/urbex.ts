@@ -114,9 +114,6 @@ export class UrbexClient extends RequestApi {
      */
     public configure(config: UrbexConfig): void {
         const configuration = this.$config.createConfigurationObject(config, false);
-
-        console.log(configuration);
-
         this.$config.set(configuration);
 
         if (isEmpty(configuration.cache)) {
