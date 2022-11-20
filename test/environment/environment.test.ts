@@ -1,18 +1,18 @@
 import chai from "chai";
+import envAgent from "env-agent";
 
-import { Environment, env } from "../../lib/environment";
+import { Environment } from "../../lib/environment";
 
 const environment = new Environment();
 
 describe("new Environment", () => {
     before(() => {
-        env.set("NODE_ENV", "development");
+        envAgent.set("NODE_ENV", "development");
     });
 
     it("should detect the environment context (browser)", function () {
         if (environment.isNode) {
             this.skip();
-            return;
         }
 
         chai.assert.strictEqual(environment.context, "browser");
@@ -23,7 +23,6 @@ describe("new Environment", () => {
     it("should detect the environment context (node)", function () {
         if (environment.isBrowser) {
             this.skip();
-            return;
         }
 
         chai.assert.strictEqual(environment.context, "node");
@@ -34,7 +33,6 @@ describe("new Environment", () => {
     it("current environment should be development", function () {
         if (environment.isBrowser) {
             this.skip();
-            return;
         }
 
         chai.assert.isTrue(environment.isDevelopment);
@@ -44,10 +42,9 @@ describe("new Environment", () => {
     it("current environment should be production", function () {
         if (environment.isBrowser) {
             this.skip();
-            return;
         }
 
-        env.set("NODE_ENV", "production");
+        envAgent.set("NODE_ENV", "production");
 
         chai.assert.isTrue(environment.isProduction);
         chai.assert.isFalse(environment.isDevelopment);
