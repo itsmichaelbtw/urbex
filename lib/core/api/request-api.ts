@@ -54,7 +54,9 @@ export class RequestApi {
     protected async dispatchRequest(config: InternalConfiguration): DispatchedResponse {
         try {
             const configuration = clone(config);
-            const concludeRequest = startRequest(configuration);
+            const concludeRequest = await startRequest(configuration);
+
+            const isCacheEnabled = configuration.cache && configuration.cache.enabled;
 
             // for some odd reason, result.cache had this weird mutation
             // issue even when CLONING the result, so I had to do this
@@ -67,7 +69,7 @@ export class RequestApi {
                 stored: false
             };
 
-            if (configuration.cache && configuration.cache.enabled) {
+            if (isCacheEnabled) {
                 const cacheKey = this.$cache.getCacheKey(configuration.url.href);
                 const entity = this.$cache.get(cacheKey, true);
 
@@ -87,7 +89,7 @@ export class RequestApi {
             const response = await this.$api.send(configuration);
             const result = await concludeRequest(response);
 
-            if (configuration.cache && configuration.cache.enabled) {
+            if (isCacheEnabled) {
                 this.$cache.set(configuration.url.href, response.data);
 
                 cache.key = this.$cache.getCacheKey(configuration.url.href);
