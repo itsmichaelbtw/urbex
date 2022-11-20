@@ -121,10 +121,6 @@ export function values<T extends IObject>(obj: T): T[keyof T][] {
     return keys(obj).map((key) => obj[key]);
 }
 
-/**
- * Iterate over an object or array.
- */
-
 export function forEach<T>(obj: T, fn: (key: keyof T, value: T[keyof T], obj: T) => void): void {
     if (isUndefined(obj)) {
         return;
