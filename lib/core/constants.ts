@@ -34,7 +34,9 @@ export const DEFAULT_CLIENT_OPTIONS: InternalConfiguration = {
     data: null,
     cache: {},
     pipelines: DEFAULT_PIPELINE_EXECUTORS,
-    maxContentLength: Infinity
+    maxContentLength: Infinity,
+    responseType: "json",
+    responseEncoding: "utf8"
 };
 
 export const DEFAULT_URBEX_RESPONSE = createEmptyScheme<UrbexResponse>([

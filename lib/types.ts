@@ -27,6 +27,18 @@ export interface IObject<V = any> {
 }
 
 /**
+ * Available response types for the request.
+ */
+export type ResponseTypes =
+    | "arraybuffer"
+    | "blob"
+    | "document"
+    | "json"
+    | "text"
+    | "stream"
+    | "raw";
+
+/**
  * User provided values for headers.
  */
 export type HeaderValues = string | number | boolean | null | undefined;
@@ -87,12 +99,14 @@ export interface BaseConfiguration<D = any> {
      *
      * Any additional data passed to the request will not be merged
      * with the default data.
+     *
+     * Defaults to `null`.
      */
     data: D;
     /**
      * Set the default timeout to use for all requests.
      *
-     * Defaults to 0 (no timeout).
+     * Defaults to `0` (no timeout).
      */
     timeout: number;
     /**
@@ -100,6 +114,8 @@ export interface BaseConfiguration<D = any> {
      *
      * See the [cache-clock](https://github.com/itsmichaelbtw/cache-clock)
      * documentation for more information.
+     *
+     * Defaults to `{}`.
      */
     cache: ClockOptions & {
         /**
@@ -114,8 +130,22 @@ export interface BaseConfiguration<D = any> {
     pipelines: PipelineExecutorsManager;
     /**
      * The max content length to allow for the response.
+     *
+     * Defaults to `Infinity`.
      */
     maxContentLength: number;
+    /**
+     * The response type to use for the request.
+     *
+     * Defaults to `json`.
+     */
+    responseType: ResponseTypes;
+    /**
+     * The encoding to use when converting the response to a string.
+     *
+     * Defaults to `utf8`.
+     */
+    responseEncoding: BufferEncoding;
 }
 
 /**

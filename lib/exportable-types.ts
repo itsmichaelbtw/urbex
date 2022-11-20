@@ -1,7 +1,7 @@
 import type { ClockOptions } from "cache-clock";
 
 import type { UrbexHeaders } from "./core/headers";
-import type { BaseConfiguration, SearchParams, Headers, NormalizedHeaders } from "./types";
+import type { BaseConfiguration, SearchParams, Headers, ResponseTypes } from "./types";
 
 /**
  * The callback to provide when creating a new pipeline executor for a request.
@@ -84,7 +84,8 @@ export interface UrbexResponse<D = any> {
      */
     response: any;
     /**
-     * The time it took to make the request in `ms`.
+     * The time it took to make the request in `ms`. This includes
+     * any pipelines that were also executed.
      *
      * Uses `Date.now()` to calculate the time.
      */
@@ -114,6 +115,10 @@ export interface UrbexResponse<D = any> {
          */
         stored: boolean;
     };
+    /**
+     * The response type that was used to make the request.
+     */
+    responseType: ResponseTypes;
 }
 
 /**
