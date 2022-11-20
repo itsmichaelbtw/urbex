@@ -45,5 +45,6 @@ function createClient(): ExtendedUrbexClient {
 const urbex = createClient();
 
 export * from "./exportable-types";
+export * from "./core/pipelines";
 
 export default urbex;
