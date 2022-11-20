@@ -1,6 +1,7 @@
 import type { InternalConfiguration, UrbexConfig, URIComponent } from "../exportable-types";
 
 import { UrbexHeaders } from "./headers";
+import { transformRequestData, transformResponseData, decodeResponseData } from "./transformers";
 import { environment } from "../environment";
 import {
     isObject,
@@ -10,7 +11,6 @@ import {
     hasOwnProperty,
     isString,
     extractMatchFromRegExp,
-    ensureLeadingSlash,
     uppercase,
     argumentIsNotProvided,
     isEmpty
@@ -59,9 +59,11 @@ export class RequestConfig {
             this.set(this.createConfigurationObject(config, true));
         }
 
-        // this.$config.pipelines.request.unshift((config) => {
-        //     return Promise.resolve(config);
-        // });
+        this.$config.pipelines.request.unshift(transformRequestData);
+
+        if (environment.isNode) {
+            this.$config.pipelines.response.unshift(decodeResponseData, transformResponseData);
+        }
     }
 
     public defaultConfig(): InternalConfiguration {
@@ -118,6 +120,23 @@ export class RequestConfig {
             }
 
             configuration.method = method;
+        }
+
+        const timeout = parseInt(
+            configuration.timeout?.toString() ?? DEFAULT_CLIENT_OPTIONS.timeout.toString()
+        );
+
+        if (isNaN(timeout)) {
+            configuration.timeout = DEFAULT_CLIENT_OPTIONS.timeout;
+        }
+
+        const maxContentLength = parseInt(
+            configuration.maxContentLength?.toString() ??
+                DEFAULT_CLIENT_OPTIONS.maxContentLength.toString()
+        );
+
+        if (isNaN(maxContentLength)) {
+            configuration.maxContentLength = DEFAULT_CLIENT_OPTIONS.maxContentLength;
         }
 
         const headers = UrbexHeaders.construct(configuration.headers, true);
