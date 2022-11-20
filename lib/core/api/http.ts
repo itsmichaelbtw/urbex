@@ -1,31 +1,22 @@
-import { InternalConfiguration } from "../../exportable-types";
-import type { DispatchedResponse, UrbexRequestApi } from "../../types";
-
 import http from "http";
 import https from "https";
 import url from "url";
+import zlib from "zlib";
+import util from "util";
+import stream from "stream";
 
-import { createPromise, combineStrings, argumentIsNotProvided, toStringCall } from "../../utils";
+import type { InternalConfiguration } from "../../exportable-types";
+import type { DispatchedResponse, UrbexRequestApi, DispatchedAPIRequest } from "../../types";
 
-function formProtocol(protocol: string): string {
-    if (protocol.endsWith(":")) {
-        return protocol;
-    }
-
-    return `${protocol}:`;
-}
-
-function constructBody(body: any): Buffer {
-    if (argumentIsNotProvided(body)) {
-        return undefined;
-    }
-
-    if (Buffer.isBuffer(body)) {
-        return body;
-    } else if (toStringCall(body) === "ArrayBuffer") {
-        return Buffer.from(new Uint8Array(body));
-    }
-}
+import {
+    combineStrings,
+    argumentIsNotProvided,
+    toStringCall,
+    isString,
+    ensureLeadingToken,
+    ensureTrailingToken
+} from "../../utils";
+import { UrbexError, TimeoutError } from "../error";
 
 export class NodeRequest implements UrbexRequestApi {
     private getAgentFromProtocol(protocol: string): typeof http | typeof https {
@@ -36,51 +27,111 @@ export class NodeRequest implements UrbexRequestApi {
         return http;
     }
 
-    public async send(config: InternalConfiguration): DispatchedResponse {
-        return createPromise((resolve, reject) => {
-            // const agent = this.getAgentFromProtocol(config.url.protocol);
-            // const agentRequestconfig: https.RequestOptions = {
-            //     protocol: formProtocol(config.url.protocol),
-            //     hostname: config.url.hostname,
-            //     path: combineStrings(
-            //         "",
-            //         config.url.endpoint,
-            //         config.url.params as string
-            //     ),
-            //     headers: config.headers.get(),
-            //     port: config.url.port
-            // };
-            // const req = agent.request(agentRequestconfig, (res) => {
-            //     const { statusCode } = res;
-            //     let error: Error | null = null;
-            //     if (error) {
-            //         res.resume();
-            //         reject(error);
-            //         return;
-            //     }
-            //     res.setEncoding("utf8");
-            //     let rawData = "";
-            //     res.on("data", (chunk) => {
-            //         rawData += chunk;
-            //     });
-            //     res.on("end", () => {
-            //         try {
-            //             resolve({
-            //                 data: rawData,
-            //                 headers: res.headers,
-            //                 status: statusCode,
-            //                 statusText: res.statusMessage,
-            //                 request: req
-            //             });
-            //         } catch (e) {
-            //             reject(e);
-            //         }
-            //     });
-            // });
-            // req.on("error", (e) => {
-            //     reject(e);
-            // });
-            // req.end(config.data);
+    private handleDataProtocolRequest(config: InternalConfiguration): DispatchedAPIRequest {
+        return new Promise((resolve, reject) => {
+            resolve({
+                data: null,
+                request: null,
+                response: null
+            });
+        });
+    }
+
+    public async send(config: InternalConfiguration): DispatchedAPIRequest {
+        return new Promise((resolve, reject) => {
+            const agent = this.getAgentFromProtocol(config.url.protocol);
+
+            if (config.url.protocol === "data") {
+                return this.handleDataProtocolRequest(config);
+            }
+
+            if (!config.headers.has("Accept-Encoding")) {
+                config.headers.set({ "Accept-Encoding": "gzip, deflate, br" });
+            }
+
+            if (config.url.params && !isString(config.url.params)) {
+                config.url.params = config.url.params.toString();
+            } else {
+                config.url.params = "";
+            }
+
+            function onError(error: any): void {
+                const err = new UrbexError(error);
+                err.config = config;
+                err.request = request;
+                return reject(err);
+            }
+
+            const options: https.RequestOptions | url.URL = {
+                protocol: ensureTrailingToken(":", config.url.protocol),
+                href: config.url.href,
+                hostname: config.url.hostname,
+                path: combineStrings("", config.url.endpoint, config.url.params),
+                headers: config.headers.get(),
+                timeout: config.timeout
+            };
+
+            if (config.url.port) {
+                const port = parseInt(config.url.port.toString());
+
+                if (!isNaN(port)) {
+                    options.port = port;
+                }
+            }
+
+            const request = agent.request(options);
+
+            request.on("response", (response) => {
+                if (response.destroyed || request.destroyed) {
+                    return onError(new UrbexError("Request was destroyed."));
+                }
+
+                if (config.responseType === "stream") {
+                    return resolve({
+                        data: response,
+                        request: request,
+                        response: response
+                    });
+                }
+
+                const chunks: Buffer[] = [];
+
+                response.on("data", chunks.push.bind(chunks));
+
+                response.on("error", onError);
+
+                response.on("close", () => {
+                    if (response.complete) {
+                        return;
+                    }
+
+                    response.destroy();
+                    request.destroy();
+                    return onError(new UrbexError("Request was closed prematurely."));
+                });
+
+                response.on("end", () => {
+                    const body = Buffer.concat(chunks);
+
+                    resolve({ data: body, request: request, response: response });
+                });
+            });
+
+            if (config.timeout) {
+                request.setTimeout(config.timeout, () => {
+                    reject(new TimeoutError(config.timeout));
+                });
+            }
+
+            request.on("error", onError);
+            request.end(config.data ?? undefined);
         });
     }
 }
+
+const br = util.promisify(zlib.brotliDecompress);
+const gzip = util.promisify(zlib.gunzip);
+const deflate = util.promisify(zlib.inflate);
+const compress = util.promisify(zlib.createUnzip);
+
+export const DECODERS = { br, gzip, deflate, compress };
