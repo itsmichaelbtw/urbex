@@ -3,3 +3,4 @@
 *.md
 *.yml
 dist
+coverage
