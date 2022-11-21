@@ -25,6 +25,14 @@ export class Environment {
         }
     }
 
+    get process(): NodeJS.Process {
+        if (this.isNode) {
+            return process;
+        }
+
+        return {} as NodeJS.Process;
+    }
+
     get context(): UrbexContext {
         return this._context;
     }

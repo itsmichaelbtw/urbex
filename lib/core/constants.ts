@@ -1,6 +1,7 @@
 import type { InternalConfiguration, URIComponent, UrbexResponse } from "../exportable-types";
 import type { PipelineExecutorsManager } from "../types";
 
+import { environment } from "../environment";
 import { merge, createEmptyScheme } from "../utils";
 
 export const DEFAULT_BROWSER_HEADERS = {
@@ -8,7 +9,7 @@ export const DEFAULT_BROWSER_HEADERS = {
 };
 
 export const DEFAULT_NODE_HEADERS = merge(DEFAULT_BROWSER_HEADERS, {
-    "User-Agent": `UrbexClient (Node.js ${process.version}; ${process.platform})`
+    "User-Agent": `UrbexClient (Node.js ${environment.process.version}; ${environment.process.platform})`
 });
 
 export const DEFAULT_URI_COMPONENT = createEmptyScheme<URIComponent>([
