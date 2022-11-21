@@ -130,9 +130,9 @@ export class NodeRequest implements UrbexRequestApi {
     }
 }
 
-const br = isFunction(zlib.brotliDecompress) ? util.promisify(zlib.brotliDecompress) : null;
-const gzip = isFunction(zlib.gunzip) ? util.promisify(zlib.gunzip) : null;
-const deflate = isFunction(zlib.inflate) ? util.promisify(zlib.inflate) : null;
-const compress = isFunction(zlib.createUnzip) ? util.promisify(zlib.createUnzip) : null;
+const br = isFunction(zlib?.brotliDecompress) ? util.promisify(zlib.brotliDecompress) : null;
+const gzip = isFunction(zlib?.gunzip) ? util.promisify(zlib.gunzip) : null;
+const deflate = isFunction(zlib?.inflate) ? util.promisify(zlib.inflate) : null;
+const compress = isFunction(zlib?.createUnzip) ? util.promisify(zlib.createUnzip) : null;
 
 export const DECODERS = { br, gzip, deflate, compress };
