@@ -110,7 +110,7 @@
   "standard-version": {
     "scripts": {
       "prerelease": "git add dist",
-      "posttag": "npm run publish:tag"
+      "posttag": "npm run push:tag"
     }
   },
   "lint-staged": {
