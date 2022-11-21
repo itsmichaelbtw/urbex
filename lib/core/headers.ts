@@ -13,7 +13,7 @@ import {
 } from "../utils";
 import { debug } from "../debug";
 import { environment } from "../environment";
-import { DEFAULT_HEADERS } from "./constants";
+import { DEFAULT_BROWSER_HEADERS, DEFAULT_NODE_HEADERS } from "./constants";
 
 function parseHeaderKey(key: string): string {
     if (key) {
@@ -67,15 +67,7 @@ export class UrbexHeaders {
 
     constructor(headers?: Headers, withDefaults: boolean = true) {
         if (withDefaults) {
-            if (environment.isNode) {
-                this.set(
-                    merge(DEFAULT_HEADERS, {
-                        "User-Agent": `UrbexClient (Node.js ${process.version}; ${process.platform})`
-                    })
-                );
-            } else {
-                this.set(DEFAULT_HEADERS, false);
-            }
+            this.set(this.defaults, false);
         }
 
         if (isObject(headers) && !isEmpty(headers)) {
@@ -87,8 +79,8 @@ export class UrbexHeaders {
         return new UrbexHeaders(headers, withDefaults);
     }
 
-    get defaults(): typeof DEFAULT_HEADERS {
-        return DEFAULT_HEADERS;
+    get defaults(): typeof DEFAULT_NODE_HEADERS | typeof DEFAULT_BROWSER_HEADERS {
+        return environment.isNode ? DEFAULT_NODE_HEADERS : DEFAULT_BROWSER_HEADERS;
     }
 
     /**
@@ -146,7 +138,7 @@ export class UrbexHeaders {
         this.$headers = {};
 
         if (!empty) {
-            this.set(DEFAULT_HEADERS, false);
+            this.set(this.defaults, false);
         }
     }
 

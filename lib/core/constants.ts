@@ -3,9 +3,13 @@ import type { PipelineExecutorsManager } from "../types";
 
 import { merge, createEmptyScheme } from "../utils";
 
-export const DEFAULT_HEADERS = {
+export const DEFAULT_BROWSER_HEADERS = {
     "Content-Type": "application/json"
 };
+
+export const DEFAULT_NODE_HEADERS = merge(DEFAULT_BROWSER_HEADERS, {
+    "User-Agent": `UrbexClient (Node.js ${process.version}; ${process.platform})`
+});
 
 export const DEFAULT_URI_COMPONENT = createEmptyScheme<URIComponent>([
     "endpoint",
