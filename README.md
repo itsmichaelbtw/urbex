@@ -1,10 +1,10 @@
 # urbex
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/orison-networks/urbex/Unit%20Tests?color=79b473&label=unit%20tests&style=flat-square)
-![Github version](https://img.shields.io/github/package-json/v/orison-networks/urbex?style=flat-square&color=6a7fdb)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/orison-networks/urbex/Unit%20Tests?label=unit%20tests&style=flat-square)
+![Github version](https://img.shields.io/github/package-json/v/orison-networks/urbex?style=flat-square)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 ![Typescript](https://img.shields.io/github/languages/top/orison-networks/urbex?style=flat-square)
-![GitHub](https://img.shields.io/github/license/orison-networks/urbex?style=flat-square&color=153131)
+![GitHub](https://img.shields.io/github/license/orison-networks/urbex?style=flat-square)
 
 > An efficient and lightweight functional HTTP client for Node.js and the browser with built in cache support, customizable pipelines, isolated clients, and more.
 
