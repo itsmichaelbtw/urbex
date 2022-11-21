@@ -8,18 +8,11 @@ export class Environment {
     }
 
     private detectContext(): UrbexContext {
-        if (
-            typeof window !== "undefined" &&
-            typeof window.document !== "undefined"
-        ) {
+        if (typeof window !== "undefined" && typeof window.document !== "undefined") {
             return "browser";
         }
 
-        if (
-            typeof process !== "undefined" &&
-            process.versions &&
-            process.versions.node
-        ) {
+        if (typeof process !== "undefined" && process.versions && process.versions.node) {
             return "node";
         }
 
@@ -28,9 +21,7 @@ export class Environment {
 
     private nodeStrictCheck(): void {
         if (this.isBrowser) {
-            throw new Error(
-                "This method is not available in the browser environment."
-            );
+            throw new Error("This method is not available in the browser environment.");
         }
     }
 
