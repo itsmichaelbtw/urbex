@@ -3,6 +3,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import babel from "@rollup/plugin-babel";
 import json from "@rollup/plugin-json";
 import bundleSize from "rollup-plugin-bundle-size";
+import autoExternal from "rollup-plugin-auto-external";
 
 import packageJson from "./package.json";
 
@@ -11,7 +12,6 @@ import { minify } from "terser";
 const extensions = [".ts"];
 const name = packageJson.name;
 const banner = `/**
-    * ${packageJson.name} v${packageJson.version}
     * ${packageJson.homepage}
     * (c) ${new Date().getFullYear()} ${packageJson.author}
     * @license ${packageJson.license}
@@ -54,7 +54,9 @@ const create = (config) => ({
         banner: banner
     },
     plugins: [
-        resolve({ extensions, browser: config.browser ?? false }),
+        // change browser: false to browser: true when buuilding for browser
+        // in the future
+        resolve({ extensions, browser: config.browser ?? false, preferBuiltins: true }),
         commonjs(),
         json(),
         babel({
@@ -74,7 +76,8 @@ const create = (config) => ({
             ]
         }),
         minifyCode(),
-        bundleSize()
+        bundleSize(),
+        (config.autoExternal ?? true) && autoExternal()
     ].concat(config.plugins ?? [])
 });
 
@@ -87,7 +90,8 @@ const cjs = create({
             constBindings: true
         }
     },
-    targets: "node > 14"
+    targets: "node > 14",
+    browser: false
 });
 
 const esm = create({
@@ -97,8 +101,12 @@ const esm = create({
         generatedCode: {
             constBindings: true
         },
-        exports: "default"
+        exports: "named",
+        globals: {
+            util: "util"
+        }
     },
+    external: ["util"],
     targets: target
 });
 
@@ -107,16 +115,17 @@ const umd = create({
         file: `dist/${name}.min.js`,
         format: "umd",
         name: "urbex",
-        exports: "default",
+        exports: "named",
         globals: {
-            fs: "fs",
-            path: "path",
-            os: "os",
             http: "http",
-            https: "https"
+            https: "https",
+            zlib: "zlib",
+            util: "util"
         }
     },
-    targets: target
+    targets: target,
+    external: ["http", "https", "zlib", "util"],
+    autoExternal: false
 });
 
 export default [umd, cjs, esm];
