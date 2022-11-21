@@ -75,7 +75,7 @@ const create = (config) => ({
                 "@babel/preset-typescript"
             ]
         }),
-        // minifyCode(),
+        minifyCode(),
         bundleSize(),
         (config.autoExternal ?? true) && autoExternal()
     ].concat(config.plugins ?? [])
