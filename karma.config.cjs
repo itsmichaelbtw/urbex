@@ -14,18 +14,18 @@ module.exports = (config) => {
             }
         ],
         plugins: [
-            "karma-mocha",
-            "karma-chai",
-            "karma-chrome-launcher",
-            "karma-firefox-launcher",
-            "karma-typescript"
+            require("karma-mocha"),
+            require("karma-chai"),
+            require("karma-typescript"),
+            require("karma-chrome-launcher")
+            // require("karma-firefox-launcher") for some god forsaken reason this fails when running in github actions
         ],
         preprocessors: {
             [libGlobal]: ["karma-typescript"],
             [testGlob]: ["karma-typescript"]
         },
         reporters: ["progress", "karma-typescript"],
-        browsers: ["ChromeHeadless", "FirefoxHeadless"],
+        browsers: ["ChromeHeadless" /*"FirefoxHeadless"*/],
         port: 9876,
         captureTimeout: 4 * 60 * 1000,
         browserDisconnectTimeout: 10000,
