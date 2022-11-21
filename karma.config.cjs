@@ -3,7 +3,7 @@ const libGlobal = "lib/**/*.ts";
 
 module.exports = (config) => {
     config.set({
-        basePath: "",
+        basePath: ".",
         frameworks: ["mocha", "chai", "karma-typescript"],
         files: [
             {
@@ -40,7 +40,11 @@ module.exports = (config) => {
                 lib: ["ES2015", "DOM", "DOM.Iterable"],
                 esModuleInterop: true,
                 module: "commonjs",
-                target: "ES2015"
+                target: "ES2015",
+                skipLibCheck: true
+            },
+            bundlerOptions: {
+                transforms: [require("karma-typescript-es6-transform")()]
             },
             include: [testGlob, libGlobal]
         }
