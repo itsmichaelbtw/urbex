@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/orison-networks/urbex/compare/v1.0.0...v1.1.0) (2022-11-21)
+
+
+### What's New
+
+* internal request api now integrates with the `CacheClock` module ([57de0d8](https://github.com/orison-networks/urbex/commit/57de0d88823414eb1da34e08a884e9ede07ef1a2))
+* **pipelines:** support for buildable pipline executors ([99adf7f](https://github.com/orison-networks/urbex/commit/99adf7f42f1026ccc8adb8bb31549330dd9f41d6))
+* **request-config:** improved config parser for an increased result output ([a9fb982](https://github.com/orison-networks/urbex/commit/a9fb982708f36b7128e2e5b636e07724b23b25ca))
+* support for `responseType` and `responseEncoding` options ([e7ce7ae](https://github.com/orison-networks/urbex/commit/e7ce7aebc478e8ac86cc01a33164a3c285c5a412))
+* **types:** extended `UrbexResponse` with additional properties ([19c23b0](https://github.com/orison-networks/urbex/commit/19c23b0b31843b821eed956954e8cb911cdb1bea))
+* **types:** improved typescript converage ([78ce34c](https://github.com/orison-networks/urbex/commit/78ce34c1d85075ba72ab7cdac6649c9bd83e7adc))
+* **types:** only necessary types are exported ([9d2c67a](https://github.com/orison-networks/urbex/commit/9d2c67a169b0040635c3b06b20bc7493145a1b58))
+
+
+### Fixed
+
+* **headers:** incorrectly assigning default headers when using in a browser ([ca56b68](https://github.com/orison-networks/urbex/commit/ca56b6831dc925a5673790857705e3e50d4023e7))
+* incorrectly checking if `endpoint` and `urlMount` start with a `/` ([761757d](https://github.com/orison-networks/urbex/commit/761757dd79a8ace1b7645a7e927e9a795da1e531))
+* uri parsing handling partial urls incorrectly ([a2ba671](https://github.com/orison-networks/urbex/commit/a2ba6716ecc0d9a26070dd2c51df294eeb49f86f))
+* **uriParser:** failing to correctly update the `url.href` [#4](https://github.com/orison-networks/urbex/issues/4) ([93228ce](https://github.com/orison-networks/urbex/commit/93228ce00e43cf7e79be938a9c765ae85cbe148d))
+
 ## 1.0.0 (2022-10-27)
 
 
