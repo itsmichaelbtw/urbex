@@ -48,7 +48,7 @@ async function minifyCode() {
 }
 
 const create = (config) => ({
-    input: input,
+    input: config.input || input,
     output: {
         ...config.output,
         banner: banner
@@ -61,7 +61,7 @@ const create = (config) => ({
         json(),
         babel({
             babelHelpers: "bundled",
-            include: ["lib/**/*.ts"],
+            include: ["lib/**/*.ts", "index.ts"],
             extensions: extensions,
             exclude: ["node_modules/**", "test/**"],
             presets: [
@@ -75,7 +75,7 @@ const create = (config) => ({
                 "@babel/preset-typescript"
             ]
         }),
-        minifyCode(),
+        // minifyCode(),
         bundleSize(),
         (config.autoExternal ?? true) && autoExternal()
     ].concat(config.plugins ?? [])
@@ -111,11 +111,12 @@ const esm = create({
 });
 
 const umd = create({
+    input: "index.ts",
     output: {
         file: `dist/${name}.min.js`,
         format: "umd",
         name: "urbex",
-        exports: "named",
+        exports: "default",
         globals: {
             http: "http",
             https: "https",
