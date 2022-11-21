@@ -14,7 +14,8 @@ import {
     toStringCall,
     isString,
     ensureLeadingToken,
-    ensureTrailingToken
+    ensureTrailingToken,
+    isFunction
 } from "../../utils";
 import { UrbexError, TimeoutError } from "../error";
 
@@ -129,9 +130,9 @@ export class NodeRequest implements UrbexRequestApi {
     }
 }
 
-const br = util.promisify(zlib.brotliDecompress);
-const gzip = util.promisify(zlib.gunzip);
-const deflate = util.promisify(zlib.inflate);
-const compress = util.promisify(zlib.createUnzip);
+const br = isFunction(zlib.brotliDecompress) ? util.promisify(zlib.brotliDecompress) : null;
+const gzip = isFunction(zlib.gunzip) ? util.promisify(zlib.gunzip) : null;
+const deflate = isFunction(zlib.inflate) ? util.promisify(zlib.inflate) : null;
+const compress = isFunction(zlib.createUnzip) ? util.promisify(zlib.createUnzip) : null;
 
 export const DECODERS = { br, gzip, deflate, compress };
