@@ -26,7 +26,7 @@
     "tsconfig.json"
   ],
   "scripts": {
-    "start": "nodemon --watch scripts --watch lib --exec \"node --experimental-specifier-resolution=node --loader ts-node/esm scripts/auto-start-server.ts\"",
+    "start": "nodemon --watch scripts --watch lib --exec \"node --experimental-specifier-resolution=node --loader ts-node/esm scripts/cli-server.ts\"",
     "test": "npm run test:mocha && npm run test:karma",
     "test:mocha": "ts-mocha -p tsconfig.json --recursive test/**/*.test.ts",
     "test:karma": "karma start karma.config.cjs --single-run",
