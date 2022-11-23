@@ -4,6 +4,10 @@ import { environment, Environment } from "./environment";
 import { UrbexClient, isUrbexClient } from "./core/urbex";
 import { PipelineExecutor } from "./core/pipelines";
 
+/**
+ * The extended client that has other methods attached to it
+ * that are not part of the core client.
+ */
 export interface ExtendedUrbexClient extends UrbexClient {
     /**
      * Create a new isolated instance of the Urbex client
