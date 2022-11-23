@@ -10,6 +10,7 @@ import {
     capitalize,
     argumentIsNotProvided,
     isEmpty,
+    isString,
     lowercase,
     stringReplacer
 } from "../utils";
@@ -103,7 +104,7 @@ export class UrbexHeaders {
      * Parse a headers string into an object
      */
     static parse(headers: string): NormalizedHeaders {
-        if (argumentIsNotProvided(headers)) {
+        if (argumentIsNotProvided(headers) || !isString(headers)) {
             return {};
         }
 

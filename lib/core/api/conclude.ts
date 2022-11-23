@@ -3,6 +3,8 @@ import type { DispatchedResponse, RequestAPIResponse } from "../../types";
 
 import { deepMerge, clone, isEmpty } from "../../utils";
 import { DEFAULT_URBEX_RESPONSE } from "../constants";
+import { environment } from "../../environment";
+import { UrbexHeaders } from "../../core/headers";
 
 type ConcludeRequest = (config: RequestAPIResponse) => Promise<DispatchedResponse>;
 
@@ -46,8 +48,18 @@ export async function startRequest(config: InternalConfiguration): Promise<Concl
 
         if (incomingResult.response) {
             response.headers = incomingResult.response.headers;
-            response.status = incomingResult.response.statusCode;
-            response.statusText = incomingResult.response.statusMessage;
+
+            if (environment.isNode) {
+                response.status = incomingResult.response.statusCode;
+                response.statusText = incomingResult.response.statusMessage;
+            } else {
+                const parsedHeaders = UrbexHeaders.parse(response.headers);
+
+                response.headers = parsedHeaders;
+
+                response.status = incomingResult.response.status;
+                response.statusText = incomingResult.response.statusText;
+            }
         }
 
         if (!isEmpty(config.pipelines.response)) {
