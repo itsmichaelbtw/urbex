@@ -68,7 +68,12 @@ export function isEmpty(value: any): boolean {
 
 export function capitalize(value: string): string {
     value = String(value);
-    return value.charAt(0).toUpperCase() + value.slice(1);
+
+    if (value.length === 1) {
+        return value.toUpperCase();
+    } else {
+        return value.charAt(0).toUpperCase() + value.slice(1);
+    }
 }
 
 export function uppercase<T extends string>(value: T): T {

@@ -117,4 +117,16 @@ describe("UrbexHeaders", () => {
             "X-Baz": "FOO"
         });
     });
+
+    it("should parse a header string into an object", () => {
+        const string = "X-Foo: bar\r X-Bar: foo\r X-Baz: FOO";
+
+        const result = UrbexHeaders.parse(string);
+
+        chai.expect(result).to.deep.equal({
+            "X-Foo": "bar",
+            "X-Bar": "foo",
+            "X-Baz": "FOO"
+        });
+    });
 });

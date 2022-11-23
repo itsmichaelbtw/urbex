@@ -9,15 +9,22 @@ import {
     merge,
     capitalize,
     argumentIsNotProvided,
-    isEmpty
+    isEmpty,
+    lowercase,
+    stringReplacer
 } from "../utils";
 import { debug } from "../debug";
 import { environment } from "../environment";
 import { DEFAULT_BROWSER_HEADERS, DEFAULT_NODE_HEADERS } from "./constants";
 
+function removeNewLines(value: string): string {
+    return stringReplacer(value, "\n", "");
+}
+
 function parseHeaderKey(key: string): string {
     if (key) {
-        return formatHeaderKey(key.toLowerCase()).trim();
+        const format = formatHeaderKey(lowercase(key)).trim();
+        return removeNewLines(format);
     }
 
     return undefined;
@@ -36,7 +43,8 @@ function parseHeaderValue(value: HeaderValues): string {
         return JSON.stringify(value);
     }
 
-    return String(value);
+    const newValue = value.toString().trim();
+    return removeNewLines(newValue);
 }
 
 function normalizeHeaders(headers: Headers): NormalizedHeaders {
@@ -59,7 +67,19 @@ function normalizeHeaders(headers: Headers): NormalizedHeaders {
 }
 
 function formatHeaderKey(key: string): string {
-    return key.split("-").map(capitalize).join("-");
+    // split by the dash
+    // capitalize each word
+    // join the words back together
+
+    const words = key.split("-");
+    const formattedWords = words.map((word) => {
+        const parsedWord = removeNewLines(word).trim();
+
+        if (parsedWord) {
+            return capitalize(parsedWord);
+        }
+    });
+    return formattedWords.join("-");
 }
 
 export class UrbexHeaders {
@@ -77,6 +97,32 @@ export class UrbexHeaders {
 
     static construct(headers: Headers = {}, withDefaults: boolean = true): UrbexHeaders {
         return new UrbexHeaders(headers, withDefaults);
+    }
+
+    /**
+     * Parse a headers string into an object
+     */
+    static parse(headers: string): NormalizedHeaders {
+        if (argumentIsNotProvided(headers)) {
+            return {};
+        }
+
+        const parsedHeaders: NormalizedHeaders = {};
+
+        const lines = headers.split("\r");
+
+        forEach(lines, (index, pair) => {
+            const [pairKey, pairValue] = pair.toString().split(":");
+
+            const key = parseHeaderKey(pairKey);
+            const value = parseHeaderValue(pairValue);
+
+            if (key && value) {
+                parsedHeaders[key] = value;
+            }
+        });
+
+        return parsedHeaders;
     }
 
     get defaults(): typeof DEFAULT_NODE_HEADERS | typeof DEFAULT_BROWSER_HEADERS {
@@ -145,7 +191,6 @@ export class UrbexHeaders {
     /**
      * Normalize an incoming headers object
      */
-
     public normalize(headers: Headers): NormalizedHeaders {
         if (argumentIsNotProvided(headers) || !isObject(headers)) {
             return {};
