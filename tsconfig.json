@@ -2,7 +2,6 @@
     "compilerOptions": {
         "lib": ["ES2015", "DOM", "ES2015.Iterable", "DOM.Iterable"],
         "target": "ES2015",
-        "module": "ES2015",
         "moduleResolution": "Node",
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
