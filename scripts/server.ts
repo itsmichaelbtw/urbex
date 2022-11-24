@@ -71,8 +71,33 @@ export function launchServer(_port: number): LaunchServer {
         })
     );
 
+    app.use((request, response, next) => {
+        if (request.method === "OPTIONS") {
+            response.status(200).end();
+            return;
+        }
+
+        next();
+    });
+
     app.get("/", (request, response) => {
-        response.send("Hello, world!");
+        const routes = app._router.stack
+            .filter((layer: any) => layer.route)
+            .map((layer: any) => {
+                const route = layer.route;
+
+                return {
+                    path: route.path,
+                    methods: Object.keys(route.methods).map((method) => {
+                        return {
+                            method: method.toUpperCase(),
+                            path: route.path
+                        };
+                    })
+                };
+            });
+
+        response.json(routes);
     });
 
     responseTypeResolver("text", responseTypeAsText);
@@ -122,7 +147,7 @@ export function launchServer(_port: number): LaunchServer {
 
         for (const code of statusCodes) {
             registerOneTripRoute(code.toString(), "get", (req, res) => {
-                res.status(code).send(`Status code: ${code}`);
+                return `Status code: ${code}`;
             });
         }
     }
