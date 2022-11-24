@@ -30,12 +30,8 @@ export async function startRequest(config: InternalConfiguration): Promise<Concl
         }
     }
 
-    // all of the request pipelines are executed here
-
     return async function concludeRequest(result): Promise<DispatchedResponse> {
         const incomingResult = result;
-
-        // all of the response pipelines are executed here
 
         let response = deepMerge(clonedResponse, {
             data: incomingResult.data,
