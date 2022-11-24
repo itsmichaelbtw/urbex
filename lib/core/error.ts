@@ -1,41 +1,57 @@
 import type { InternalConfiguration, UrbexErrorType, UrbexResponse } from "../exportable-types";
 
+interface ErrorInstanceBinding {
+    config: InternalConfiguration;
+    request: any;
+}
 export class UrbexError extends Error implements UrbexErrorType {
     status: number;
     request: any;
     config: InternalConfiguration<any>;
     response: UrbexResponse<any>;
 
-    constructor(error: any) {
-        if (!(error instanceof Error)) {
-            error = new Error(error);
-        }
+    static create<T extends typeof UrbexError>(
+        this: T,
+        config?: InternalConfiguration
+    ): InstanceType<T> {
+        const error = new this();
+        error.config = config;
 
-        super(error.message);
-        this.name = error.name;
-        this.stack = error.stack;
+        return error as InstanceType<T>;
     }
 
-    static create(
-        error: any,
-        config: InternalConfiguration<any>,
-        response: UrbexResponse<any>
-    ): UrbexError {
-        const urbexError = new UrbexError(error);
+    static createErrorInstance<T extends typeof UrbexError>(
+        this: ErrorInstanceBinding,
+        instance: T
+    ): InstanceType<T> {
+        const error = instance.create.call(instance, this.config);
+        error.request = this.request;
+        return error as InstanceType<T>;
+    }
 
-        urbexError.config = config;
-        urbexError.response = response;
-        urbexError.status = response.status;
-        urbexError.request = config;
-
-        return urbexError;
+    static isInstance<T extends typeof UrbexError>(error: any): error is InstanceType<T> {
+        return error instanceof UrbexError;
     }
 }
 
 export class TimeoutError extends UrbexError {
-    constructor(timeout: number) {
-        const error = new Error(`Request timed out after ${timeout}ms.`);
+    constructor() {
+        super();
 
-        super(error);
+        this.name = "TimeoutError";
+        this.message = "The request timed out.";
+    }
+
+    public set timeout(timeout: number) {
+        this.message = `Timeout of ${timeout}ms exceeded`;
+    }
+}
+
+export class NetworkError extends UrbexError {
+    constructor() {
+        super();
+
+        this.name = "NetworkError";
+        this.message = "Failed to request the resource.";
     }
 }

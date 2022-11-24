@@ -10,7 +10,7 @@ import { startRequest } from "./conclude";
 import { environment } from "../../environment";
 import { UrbexError } from "../error";
 import { UrbexHeaders } from "../headers";
-import { clone } from "../../utils";
+import { clone, isUndefined } from "../../utils";
 
 // here all of the interceptors are checked
 // cache clocks are checked here
@@ -89,7 +89,7 @@ export class RequestApi {
             const response = await this.$api.send(configuration);
             const result = await concludeRequest(response);
 
-            if (isCacheEnabled) {
+            if (isCacheEnabled && !isUndefined(response.data)) {
                 this.$cache.set(configuration.url.href, response.data);
 
                 cache.key = this.$cache.getCacheKey(configuration.url.href);
@@ -100,7 +100,13 @@ export class RequestApi {
 
             return Promise.resolve(result);
         } catch (error: any) {
-            return Promise.reject(new UrbexError(error));
+            if (UrbexError.isInstance(error)) {
+                return Promise.reject(error);
+            }
+
+            const internalError = UrbexError.create(config);
+            internalError.message = error.message;
+            return Promise.reject(internalError);
         }
     }
 }
