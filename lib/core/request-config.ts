@@ -13,7 +13,8 @@ import {
     extractMatchFromRegExp,
     uppercase,
     argumentIsNotProvided,
-    isEmpty
+    isEmpty,
+    isFunction
 } from "../utils";
 import { isValidURL, serializeParams, parseURIIntoComponent } from "./url";
 import { PROTOCOL_REGEXP, HOSTNAME_REGEXP, METHODS } from "../constants";
@@ -137,6 +138,10 @@ export class RequestConfig {
 
         if (isNaN(maxContentLength)) {
             configuration.maxContentLength = DEFAULT_CLIENT_OPTIONS.maxContentLength;
+        }
+
+        if (!isFunction(config.resolveStatus)) {
+            config.resolveStatus = DEFAULT_CLIENT_OPTIONS.resolveStatus;
         }
 
         const headers = UrbexHeaders.construct(configuration.headers, true);

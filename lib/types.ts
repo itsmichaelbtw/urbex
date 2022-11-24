@@ -2,6 +2,7 @@ import type { ClockOptions } from "cache-clock";
 
 import type { PipelineExecutor } from "./core/pipelines";
 import type { UrbexHeaders } from "./core/headers";
+import type { UrbexError } from "./core/error";
 import type {
     UrbexURL,
     UrbexResponse,
@@ -62,12 +63,9 @@ export type Methods = MethodsUpper | MethodsLower;
 export type RequestUrlPath = string;
 
 /**
- * The execution manager for the request pipeline.
+ * A function that determines if the response should resolve or reject.
  */
-export interface PipelineExecutorsManager {
-    request?: PipelineExecutor<RequestExecutor>[];
-    response?: PipelineExecutor<ResponseExecutor>[];
-}
+export type ResolveStatus = (config: InternalConfiguration, status: number) => boolean;
 
 /**
  * The resolved callback when a request has been fulfilled.
@@ -78,6 +76,14 @@ export type DispatchedResponse = Promise<UrbexResponse>;
  * The resolved callback when the request api has been made.
  */
 export type DispatchedAPIRequest = Promise<RequestAPIResponse>;
+
+/**
+ * The execution manager for the request pipeline.
+ */
+export interface PipelineExecutorsManager {
+    request?: PipelineExecutor<RequestExecutor>[];
+    response?: PipelineExecutor<ResponseExecutor>[];
+}
 
 /**
  * The base configuration object.
@@ -146,6 +152,13 @@ export interface BaseConfiguration<D = any> {
      * Defaults to `utf8`.
      */
     responseEncoding: BufferEncoding;
+    /**
+     * A function that determines whether the request should be considered
+     * successful or not.
+     *
+     * Provides the `InternalConfiguration` object and `status` code.
+     */
+    resolveStatus: ResolveStatus;
 }
 
 /**
