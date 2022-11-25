@@ -4,7 +4,8 @@ import type { MethodsUpper } from "./types";
 // currently only http and https are supported
 
 // regex to get the protocol from the uri component, can match anything
-export const PROTOCOL_REGEXP = /^([a-z0-9]+):\/\//i;
+// should return http or https
+export const PROTOCOL_REGEXP = /^(?:([a-z]+):\/\/)?([^:\/\n]+)/i;
 export const HOSTNAME_REGEXP = /^(?:https?:\/\/)?(?:[^@\/\n]+@)?([^:\/\n]+)/i;
 export const PORT_REGEXP = /:(\d{2,5})$/;
 
