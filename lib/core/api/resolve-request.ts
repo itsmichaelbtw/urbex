@@ -30,6 +30,9 @@ export function resolveRequest(
     error.message = environment.isNode
         ? entity.response.statusMessage
         : entity.response.statusText ?? errorMessage;
+    error.request = this.request;
+    error.status = status;
+    error.response = entity.response;
 
     return reject(error);
 }
