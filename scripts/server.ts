@@ -156,10 +156,13 @@ export function launchServer(_port: number): LaunchServer {
         }
 
         for (const code of statusCodes) {
-            registerOneTripRoute(code.toString(), "get", (req, res) => {
-                res.status(code);
-                return `Status code: ${code}`;
-            });
+            for (const method of METHODS) {
+                const lower = lowercase(method) as MethodsLower;
+
+                registerOneTripRoute(`${code}`, lower, (req, res) => {
+                    res.status(code).send(`HTTP ${code} response.`);
+                });
+            }
         }
     }
 
