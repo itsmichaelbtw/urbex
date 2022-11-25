@@ -52,14 +52,7 @@ export function launchServer(_port: number): LaunchServer {
     const app = express();
     const port = parseInt(_port.toString()) || 3000;
 
-    app.use(
-        express.json({
-            verify: (req, res, buf) => {
-                // @ts-ignore
-                req.rawBody = buf.toString();
-            }
-        })
-    );
+    app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
     app.use(
         cors({
@@ -160,7 +153,8 @@ export function launchServer(_port: number): LaunchServer {
                 const lower = lowercase(method) as MethodsLower;
 
                 registerOneTripRoute(`${code}`, lower, (req, res) => {
-                    res.status(code).send(`HTTP ${code} response.`);
+                    res.status(code);
+                    return `Status code ${code}.`;
                 });
             }
         }
