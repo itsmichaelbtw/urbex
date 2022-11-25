@@ -60,10 +60,11 @@ export class RequestConfig {
             this.set(this.createConfigurationObject(config, true));
         }
 
-        this.$config.pipelines.request.unshift(transformRequestData);
+        this.$config.pipelines.request.push(transformRequestData);
+        this.$config.pipelines.response.push(transformResponseData);
 
         if (environment.isNode) {
-            this.$config.pipelines.response.unshift(decodeResponseData, transformResponseData);
+            this.$config.pipelines.response.unshift(decodeResponseData);
         }
     }
 

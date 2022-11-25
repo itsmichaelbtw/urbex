@@ -39,7 +39,10 @@ export class BrowserRequest implements UrbexRequestApi {
 
             request.open(uppercase(config.method), config.url.href, true);
 
-            if (BROWSER_RESPONSE_TYPES.includes(config.responseType)) {
+            if (
+                BROWSER_RESPONSE_TYPES.includes(config.responseType) &&
+                config.responseType !== "json"
+            ) {
                 request.responseType = config.responseType as BrowserResponseTypes;
             }
 

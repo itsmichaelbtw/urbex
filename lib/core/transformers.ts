@@ -10,7 +10,7 @@ export const transformRequestData = new PipelineExecutor<RequestExecutor>((confi
 });
 
 export const decodeResponseData = new PipelineExecutor<ResponseExecutor>(async (response) => {
-    const responseType = response.config.responseType;
+    const { responseType, maxContentLength } = response.config;
 
     if (responseType === "raw" || responseType === "stream") {
         return Promise.resolve(response);
@@ -24,7 +24,6 @@ export const decodeResponseData = new PipelineExecutor<ResponseExecutor>(async (
 
             if (decoder) {
                 const decompressed = await decoder(response.data);
-                const maxContentLength = response.config.maxContentLength;
 
                 if (maxContentLength > -1 || maxContentLength !== Infinity) {
                     if (decompressed.length > maxContentLength) {
@@ -45,23 +44,25 @@ export const decodeResponseData = new PipelineExecutor<ResponseExecutor>(async (
 });
 
 export const transformResponseData = new PipelineExecutor<ResponseExecutor>((response) => {
-    const responseType = response.config.responseType;
+    const { responseType, responseEncoding } = response.config;
 
     if (responseType === "raw" || responseType === "arraybuffer" || responseType === "stream") {
         return Promise.resolve(response);
     }
 
     if (response.data) {
-        // https://stackoverflow.com/questions/24356713/node-js-readfile-error-with-utf8-encoded-file-on-windows
+        let data = response.data;
 
-        const { responseEncoding, responseType } = response.config;
+        if (environment.isNode) {
+            // https://stackoverflow.com/questions/24356713/node-js-readfile-error-with-utf8-encoded-file-on-windows
 
-        const bufferString = response.data.toString(responseEncoding);
+            data = response.data.toString(responseEncoding);
+        }
 
         if (responseType === "json") {
-            response.data = safeJSONParse(bufferString, true);
+            response.data = safeJSONParse(data, true);
         } else {
-            response.data = bufferString;
+            response.data = data;
         }
     }
 
