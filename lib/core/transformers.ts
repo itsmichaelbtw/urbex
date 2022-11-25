@@ -3,6 +3,7 @@ import type { RequestExecutor, ResponseExecutor } from "../exportable-types";
 import { PipelineExecutor } from "./pipelines";
 import { environment } from "../environment";
 import { DECODERS } from "./api/http";
+import { safeJSONParse } from "../utils";
 
 export const transformRequestData = new PipelineExecutor<RequestExecutor>((config) => {
     return Promise.resolve(config);
@@ -58,7 +59,7 @@ export const transformResponseData = new PipelineExecutor<ResponseExecutor>((res
         const bufferString = response.data.toString(responseEncoding);
 
         if (responseType === "json") {
-            response.data = JSON.parse(bufferString);
+            response.data = safeJSONParse(bufferString, true);
         } else {
             response.data = bufferString;
         }

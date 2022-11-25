@@ -219,6 +219,18 @@ export function safeStringify(value: any): string {
     }
 }
 
+export function safeJSONParse(value: string, returnValueOnError: boolean = false): any {
+    try {
+        return JSON.parse(value);
+    } catch (error) {
+        if (returnValueOnError) {
+            return value;
+        }
+
+        return null;
+    }
+}
+
 export function createEmptyScheme<T>(keys: string[]): T {
     return keys.reduce((acc, key) => {
         const keys = key.split(".");
