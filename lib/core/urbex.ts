@@ -95,14 +95,14 @@ export class UrbexClient extends RequestApi {
     /**
      * Current, and most up-to-date configuration of the UrbexClient.
      */
-    get config(): InternalConfiguration {
+    get config(): Readonly<InternalConfiguration> {
         return this.$config.get();
     }
 
     /**
      * The internal cache module.
      */
-    get cache(): CacheClock {
+    get cache(): Readonly<CacheClock> {
         return this.$cache;
     }
 
