@@ -5,19 +5,14 @@ import zlib from "zlib";
 import util from "util";
 import stream from "stream";
 
+import type { Socket } from "net";
+
 import type { InternalConfiguration } from "../../exportable-types";
 import type { DispatchedResponse, UrbexRequestApi, DispatchedAPIRequest } from "../../types";
 
-import {
-    combineStrings,
-    argumentIsNotProvided,
-    toStringCall,
-    isString,
-    ensureLeadingToken,
-    ensureTrailingToken,
-    isFunction
-} from "../../utils";
-import { UrbexError, TimeoutError } from "../error";
+import { resolveRequest } from "./resolve-request";
+import { UrbexError, TimeoutError, NetworkError } from "../error";
+import { combineStrings, isString, ensureTrailingToken, isFunction } from "../../utils";
 
 export class NodeRequest implements UrbexRequestApi {
     private getAgentFromProtocol(protocol: string): typeof http | typeof https {
@@ -39,7 +34,7 @@ export class NodeRequest implements UrbexRequestApi {
     }
 
     public async send(config: InternalConfiguration): DispatchedAPIRequest {
-        return new Promise((resolve, reject) => {
+        return new Promise((_resolve, _reject) => {
             const agent = this.getAgentFromProtocol(config.url.protocol);
 
             if (config.url.protocol === "data") {
@@ -54,13 +49,6 @@ export class NodeRequest implements UrbexRequestApi {
                 config.url.params = config.url.params.toString();
             } else {
                 config.url.params = "";
-            }
-
-            function onError(error: any): void {
-                const err = new UrbexError(error);
-                err.config = config;
-                err.request = request;
-                return reject(err);
             }
 
             const options: https.RequestOptions | url.URL = {
@@ -82,9 +70,56 @@ export class NodeRequest implements UrbexRequestApi {
 
             const request = agent.request(options);
 
-            request.on("response", (response) => {
+            function resolve(response: any): void {
+                return resolveRequest.call({ config, request }, _resolve, _reject, response);
+            }
+
+            function createErrorInstance<T extends typeof UrbexError>(
+                instance: T
+            ): InstanceType<T> {
+                return UrbexError.createErrorInstance.call({ config, request }, instance);
+            }
+
+            function onData(this: Buffer[], data: any): void {
+                this.push(data);
+            }
+
+            function onError(this: http.IncomingMessage, error: Error): void {
+                if (error instanceof UrbexError) {
+                    return _reject(error);
+                }
+
+                const errorInstance = createErrorInstance(NetworkError);
+                errorInstance.message = error.message;
+                return _reject(errorInstance);
+            }
+
+            function onClose(this: http.IncomingMessage): void {
+                if (this.complete || this.aborted || this.destroyed) {
+                    return;
+                }
+
+                this.destroy();
+                request.destroy();
+            }
+
+            function onEnd(this: Buffer[], response: http.IncomingMessage): void {
+                const body = Buffer.concat(this);
+
+                resolve({ data: body, request: request, response: response });
+                onClose.call(response);
+            }
+
+            function onTimeout(): void {
+                const timeoutError = createErrorInstance(TimeoutError);
+                timeoutError.timeout = config.timeout;
+
+                request.destroy(timeoutError);
+            }
+
+            function onResponse(response: http.IncomingMessage): void {
                 if (response.destroyed || request.destroyed) {
-                    return onError(new UrbexError("Request was destroyed."));
+                    return;
                 }
 
                 if (config.responseType === "stream") {
@@ -97,34 +132,33 @@ export class NodeRequest implements UrbexRequestApi {
 
                 const chunks: Buffer[] = [];
 
-                response.on("data", chunks.push.bind(chunks));
+                response.on("data", (chunk) => {
+                    onData.call(chunks, chunk);
+                });
 
-                response.on("error", onError);
+                response.on("error", (error) => {
+                    onError.call(response, error);
+                });
 
                 response.on("close", () => {
-                    if (response.complete) {
-                        return;
-                    }
-
-                    response.destroy();
-                    request.destroy();
-                    return onError(new UrbexError("Request was closed prematurely."));
+                    onClose.call(response);
                 });
 
                 response.on("end", () => {
-                    const body = Buffer.concat(chunks);
-
-                    resolve({ data: body, request: request, response: response });
-                });
-            });
-
-            if (config.timeout) {
-                request.setTimeout(config.timeout, () => {
-                    reject(new TimeoutError(config.timeout));
+                    onEnd.call(chunks, response);
                 });
             }
 
-            request.on("error", onError);
+            request.on("response", onResponse);
+
+            request.on("error", (error) => {
+                onError.call(request, error);
+            });
+
+            if (config.timeout) {
+                request.on("timeout", onTimeout);
+            }
+
             request.end(config.data ?? undefined);
         });
     }
