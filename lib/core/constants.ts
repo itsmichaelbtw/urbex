@@ -12,6 +12,8 @@ export const DEFAULT_NODE_HEADERS = merge(DEFAULT_BROWSER_HEADERS, {
     "User-Agent": `UrbexClient (Node.js ${environment.process.version}; ${environment.process.platform})`
 });
 
+export const REQUEST_BODY_METHODS = ["POST", "PUT", "PATCH"];
+
 export const DEFAULT_URI_COMPONENT = createEmptyScheme<URIComponent>([
     "endpoint",
     "hostname",

@@ -1,13 +1,22 @@
 import type { RequestExecutor, ResponseExecutor } from "../exportable-types";
 
+import { REQUEST_BODY_METHODS } from "./constants";
 import { PipelineExecutor } from "./pipelines";
 import { environment } from "../environment";
 import { DECODERS } from "./api/http";
-import { safeJSONParse } from "../utils";
+import { safeJSONParse, uppercase } from "../utils";
 
 export const transformRequestData = new PipelineExecutor<RequestExecutor>((config) => {
+    if (REQUEST_BODY_METHODS.includes(uppercase(config.method))) {
+        config.headers.set({
+            "Content-Type": "application/x-www-form-urlencoded"
+        });
+    }
+
     return Promise.resolve(config);
 });
+
+// the below `decodeResponseData` is only used for NodeJS
 
 export const decodeResponseData = new PipelineExecutor<ResponseExecutor>(async (response) => {
     const { responseType, maxContentLength } = response.config;
