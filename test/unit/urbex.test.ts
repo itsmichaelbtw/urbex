@@ -64,4 +64,14 @@ describe("urbex", () => {
             chai.expect(urbex.config.timeout).to.equal(1000);
         });
     });
+
+    it("should have http methods", () => {
+        chai.expect(urbex).to.have.property("get");
+        chai.expect(urbex).to.have.property("post");
+        chai.expect(urbex).to.have.property("put");
+        chai.expect(urbex).to.have.property("patch");
+        chai.expect(urbex).to.have.property("delete");
+        chai.expect(urbex).to.have.property("head");
+        chai.expect(urbex).to.have.property("options");
+    });
 });
