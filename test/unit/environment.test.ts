@@ -1,7 +1,7 @@
 import chai from "chai";
 import envAgent from "env-agent";
 
-import { Environment } from "../lib/environment";
+import { Environment } from "../../lib/environment";
 
 const environment = new Environment();
 
