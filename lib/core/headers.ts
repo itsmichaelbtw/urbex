@@ -162,7 +162,7 @@ export class UrbexHeaders {
      * Whether the headers object contains a given header
      */
     public has(key: string): boolean {
-        return hasOwnProperty(this.$headers, key);
+        return hasOwnProperty(this.$headers, parseHeaderKey(key));
     }
 
     /**
