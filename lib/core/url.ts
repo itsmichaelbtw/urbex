@@ -56,7 +56,7 @@ export function isValidURL(url: string): boolean {
     }
 }
 
-export function convertStringToURIComponent(input: string, urlMount: string = ""): URIComponent {
+export function convertStringToURIComponent(input: string, urlMount = ""): URIComponent {
     const url = new URL(input);
 
     const protocol = stringReplacer(url.protocol, ":", "") as string;
@@ -112,7 +112,7 @@ export function convertURIComponentToString(input: Partial<URIComponent>): strin
 
 export function parseURIIntoComponent(
     component: UrbexURL,
-    allowEndpoints: boolean = true
+    allowEndpoints = true
 ): Partial<URIComponent> {
     if (isString(component)) {
         if (isValidURL(component)) {

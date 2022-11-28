@@ -86,7 +86,7 @@ function formatHeaderKey(key: string): string {
 export class UrbexHeaders {
     protected $headers: NormalizedHeaders = {};
 
-    constructor(headers?: Headers, withDefaults: boolean = true) {
+    constructor(headers?: Headers, withDefaults = true) {
         if (withDefaults) {
             this.set(this.defaults, false);
         }
@@ -96,7 +96,7 @@ export class UrbexHeaders {
         }
     }
 
-    static construct(headers: Headers = {}, withDefaults: boolean = true): UrbexHeaders {
+    static construct(headers: Headers = {}, withDefaults = true): UrbexHeaders {
         return new UrbexHeaders(headers, withDefaults);
     }
 
@@ -140,7 +140,7 @@ export class UrbexHeaders {
      * @param headers The headers to set
      * @param forceMerge Whether to merge the headers with the existing configuration
      */
-    public set(headers?: Headers, forceMerge: boolean = true): Headers {
+    public set(headers?: Headers, forceMerge = true): Headers {
         if (!isObject(headers)) {
             debug("error", `Attempted to set headers with a non-object value: ${typeof headers}`);
             return headers;
@@ -181,7 +181,7 @@ export class UrbexHeaders {
      * @param empty Whether to empty the headers object
      *
      */
-    public clear(empty: boolean = false): void {
+    public clear(empty = false): void {
         this.$headers = {};
 
         if (!empty) {

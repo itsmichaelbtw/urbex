@@ -145,7 +145,7 @@ export function forEach<T>(obj: T, fn: (key: keyof T, value: T[keyof T], obj: T)
 export function extractMatchFromRegExp(
     value: string | null,
     regexp: RegExp,
-    group: number = 0,
+    group = 0,
     defaultValue: any = null
 ): string | null {
     if (value) {
@@ -199,7 +199,7 @@ export function argumentIsNotProvided(value: unknown): boolean {
     return value === undefined || value === null;
 }
 
-export function combinedStringss(delimiter: string = "", ...strings: string[]): string {
+export function combinedStringss(delimiter = "", ...strings: string[]): string {
     return strings.filter((string) => !isEmpty(string)).join(delimiter);
 }
 
@@ -219,7 +219,7 @@ export function safeStringify(value: any): string {
     }
 }
 
-export function safeJSONParse(value: string, returnValueOnError: boolean = false): any {
+export function safeJSONParse(value: string, returnValueOnError = false): any {
     try {
         return JSON.parse(value);
     } catch (error) {
