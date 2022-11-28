@@ -26,12 +26,14 @@
     "tsconfig.json"
   ],
   "scripts": {
-    "start": "nodemon --watch scripts --watch lib --exec \"node --experimental-specifier-resolution=node --loader ts-node/esm scripts/cli-server.ts\"",
-    "test": "npm run test:mocha && npm run test:karma",
+    "start": "nodemon --watch scripts --watch lib --exec \"npm run server\"",
+    "test": "concurrently --success first -k \"npm run && npm run test:mocha && npm run test:karma\" \"npm run server\"",
     "test:mocha": "ts-mocha -p tsconfig.json --recursive test/**/*.test.ts",
     "test:karma": "karma start karma.config.cjs --single-run",
-    "lint:check": "eslint lib --ignore-path .gitignore --ext .ts",
-    "lint:fix": "eslint lib --ignore-path .gitignore --ext .ts --fix",
+    "server": "node --experimental-specifier-resolution=node --loader ts-node/esm scripts/cli-server.ts",
+    "server:wait": "wait-on -t 2500 http://localhost:8080",
+    "lint": "eslint lib --ignore-path .eslintignore --ext .ts",
+    "lint:fix": "npm run lint -- --fix",
     "prettier:check": "prettier --check .",
     "prettier:write": "prettier --write .",
     "clean:dist": "rimraf dist",
@@ -79,8 +81,12 @@
     "@typescript-eslint/eslint-plugin": "^5.44.0",
     "@typescript-eslint/parser": "^5.44.0",
     "chai": "^4.3.7",
+    "concurrently": "^7.6.0",
     "cors": "^2.8.5",
     "env-agent": "^2.1.2",
+    "eslint": "^8.28.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
     "express": "^4.18.2",
     "husky": "^8.0.2",
     "karma": "^6.4.1",
@@ -105,7 +111,8 @@
     "ts-loader": "^9.4.1",
     "ts-mocha": "^10.0.0",
     "ts-node": "^10.9.1",
-    "typescript": "^4.9.3"
+    "typescript": "^4.9.3",
+    "wait-on": "^6.0.1"
   },
   "standard-version": {
     "scripts": {
