@@ -12,7 +12,7 @@ import type { DispatchedResponse, UrbexRequestApi, DispatchedAPIRequest } from "
 
 import { resolveRequest } from "./resolve-request";
 import { UrbexError, TimeoutError, NetworkError } from "../error";
-import { combineStrings, isString, ensureTrailingToken, isFunction } from "../../utils";
+import { combinedStringss, isString, ensureTrailingToken, isFunction } from "../../utils";
 
 export class NodeRequest implements UrbexRequestApi {
     private getAgentFromProtocol(protocol: string): typeof http | typeof https {
@@ -55,7 +55,7 @@ export class NodeRequest implements UrbexRequestApi {
                 protocol: ensureTrailingToken(":", config.url.protocol),
                 href: config.url.href,
                 hostname: config.url.hostname,
-                path: combineStrings("", config.url.endpoint, config.url.params),
+                path: combinedStringss("", config.url.endpoint, config.url.params),
                 headers: config.headers.get(),
                 timeout: config.timeout
             };

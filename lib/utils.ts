@@ -199,7 +199,7 @@ export function argumentIsNotProvided(value: unknown): boolean {
     return value === undefined || value === null;
 }
 
-export function combineStrings(delimiter: string = "", ...strings: string[]): string {
+export function combinedStringss(delimiter: string = "", ...strings: string[]): string {
     return strings.filter((string) => !isEmpty(string)).join(delimiter);
 }
 

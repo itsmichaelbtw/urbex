@@ -15,7 +15,7 @@ import {
     ensureLeadingToken,
     stringReplacer,
     argumentIsNotProvided,
-    combineStrings,
+    combinedStringss,
     forEach,
     merge,
     isFunction,
