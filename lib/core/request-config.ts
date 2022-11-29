@@ -8,6 +8,7 @@ import {
     merge,
     deepMerge,
     clone,
+    deepClone,
     hasOwnProperty,
     isString,
     extractMatchFromRegExp,
@@ -18,7 +19,11 @@ import {
 } from "../utils";
 import { isValidURL, serializeParams, parseURIIntoComponent } from "./url";
 import { PROTOCOL_REGEXP, HOSTNAME_REGEXP, METHODS } from "../constants";
-import { DEFAULT_CLIENT_OPTIONS, DEFAULT_URI_COMPONENT } from "./constants";
+import {
+    DEFAULT_CLIENT_OPTIONS,
+    DEFAULT_PIPELINE_EXECUTORS,
+    DEFAULT_URI_COMPONENT
+} from "./constants";
 
 function determineAppropriateURI(): URIComponent {
     const component = merge(DEFAULT_URI_COMPONENT, {
@@ -49,23 +54,32 @@ export class RequestConfig {
     private $config: InternalConfiguration;
 
     constructor(config?: UrbexConfig) {
-        const component = parseURIIntoComponent(determineAppropriateURI());
-
-        this.$config = merge(DEFAULT_CLIENT_OPTIONS, {
-            url: component,
-            headers: new UrbexHeaders()
-        });
+        this.setup();
 
         if (isObject(config) && !isEmpty(config)) {
             this.set(this.createConfigurationObject(config, true));
         }
+    }
 
-        this.$config.pipelines.request.push(transformRequestData);
-        this.$config.pipelines.response.push(transformResponseData);
+    private setup(): void {
+        const component = parseURIIntoComponent(determineAppropriateURI());
+
+        const pipelines = deepClone(DEFAULT_PIPELINE_EXECUTORS);
+
+        pipelines.request.push(transformRequestData);
+        pipelines.response.push(transformResponseData);
 
         if (environment.isNode) {
-            this.$config.pipelines.response.unshift(decodeResponseData);
+            pipelines.response.unshift(decodeResponseData);
         }
+
+        const configuration = deepMerge(DEFAULT_CLIENT_OPTIONS, {
+            url: component,
+            headers: new UrbexHeaders(),
+            pipelines: pipelines
+        });
+
+        this.set(configuration);
     }
 
     public defaultConfig(): InternalConfiguration {
@@ -185,5 +199,7 @@ export class RequestConfig {
     /**
      * Reset the configuration to its default state.
      */
-    public reset() {}
+    public reset() {
+        this.setup();
+    }
 }

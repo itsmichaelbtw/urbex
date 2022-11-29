@@ -10,7 +10,7 @@ import { startRequest } from "./conclude";
 import { environment } from "../../environment";
 import { UrbexError } from "../error";
 import { UrbexHeaders } from "../headers";
-import { clone, isUndefined } from "../../utils";
+import { clone, deepClone, isUndefined } from "../../utils";
 
 // here all of the interceptors are checked
 // cache clocks are checked here
@@ -53,7 +53,7 @@ export class RequestApi {
 
     protected async dispatchRequest(config: InternalConfiguration): DispatchedResponse {
         try {
-            const configuration = clone(config);
+            const configuration = deepClone(config);
             const concludeRequest = await startRequest(configuration);
 
             const isCacheEnabled = configuration.cache && configuration.cache.enabled;
@@ -62,25 +62,26 @@ export class RequestApi {
             // issue even when CLONING the result, so I had to do this
             // to get it to work properly
 
-            const cache: UrbexResponse["cache"] = {
-                key: null,
-                hit: false,
-                pulled: false,
-                stored: false
-            };
+            // solved: the clone function that is internally provided
+            // only shallow clones the object, so the cache object
+            // was being mutated. It is now deep cloned.
 
             if (isCacheEnabled) {
                 const cacheKey = this.$cache.getCacheKey(configuration.url.href);
                 const entity = this.$cache.get(cacheKey, true);
 
-                cache.hit = true;
-
                 if (entity) {
-                    const result = await concludeRequest({ data: entity.v });
-
-                    cache.key = cacheKey;
-                    cache.pulled = true;
-                    result.cache = cache;
+                    const result = await concludeRequest({
+                        data: entity.v,
+                        request: null,
+                        response: null,
+                        cache: {
+                            key: cacheKey,
+                            pulled: true,
+                            hit: true,
+                            stored: false
+                        }
+                    });
 
                     return Promise.resolve(result);
                 }
@@ -89,14 +90,14 @@ export class RequestApi {
             const response = await this.$api.send(configuration);
             const result = await concludeRequest(response);
 
-            if (isCacheEnabled && !isUndefined(response.data)) {
-                this.$cache.set(configuration.url.href, response.data);
+            if (isCacheEnabled && !isUndefined(result.data)) {
+                this.$cache.set(configuration.url.href, result.data);
 
-                cache.key = this.$cache.getCacheKey(configuration.url.href);
-                cache.stored = true;
+                result.cache.key = this.$cache.getCacheKey(configuration.url.href);
+                result.cache.stored = true;
             }
 
-            result.cache = cache;
+            result.cache.hit = isCacheEnabled;
 
             return Promise.resolve(result);
         } catch (error: any) {

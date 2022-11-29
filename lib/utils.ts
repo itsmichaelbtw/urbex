@@ -86,9 +86,27 @@ export function lowercase(value: string): string {
 
 export function clone<T>(value: T): T {
     if (isArray(value)) {
-        return value.slice() as T;
+        return value.slice() as unknown as T;
     } else if (isObject(value)) {
         return Object.assign({}, value) as T;
+    } else {
+        return value;
+    }
+}
+
+export function deepClone<T>(value: T): T {
+    if (isArray(value)) {
+        return value.map(deepClone) as unknown as T;
+    } else if (isObject(value) && value.constructor === Object) {
+        const clone = {} as T;
+
+        for (const key in value) {
+            if (hasOwnProperty(value, key)) {
+                clone[key] = deepClone(value[key]);
+            }
+        }
+
+        return clone;
     } else {
         return value;
     }
@@ -250,4 +268,9 @@ export function createEmptyScheme<T>(keys: string[]): T {
 
         return acc;
     }, {} as T);
+}
+
+export function mutate<T>(value: T, mutator: (value: T) => void): T {
+    mutator(value);
+    return value;
 }
