@@ -6,6 +6,8 @@ import { environment } from "../environment";
 import { DECODERS } from "./api/http";
 import { safeJSONParse, uppercase } from "../utils";
 
+const SKIPPABLE_RESPONSE_TYPES = ["stream", "raw"];
+
 export const transformRequestData = new PipelineExecutor<RequestExecutor>((config) => {
     if (REQUEST_BODY_METHODS.includes(uppercase(config.method))) {
         config.headers.set({
@@ -21,7 +23,7 @@ export const transformRequestData = new PipelineExecutor<RequestExecutor>((confi
 export const decodeResponseData = new PipelineExecutor<ResponseExecutor>(async (response) => {
     const { responseType, maxContentLength } = response.config;
 
-    if (responseType === "raw" || responseType === "stream") {
+    if (SKIPPABLE_RESPONSE_TYPES.includes(responseType) || response.cache.pulled) {
         return Promise.resolve(response);
     }
 
@@ -55,7 +57,11 @@ export const decodeResponseData = new PipelineExecutor<ResponseExecutor>(async (
 export const transformResponseData = new PipelineExecutor<ResponseExecutor>((response) => {
     const { responseType, responseEncoding } = response.config;
 
-    if (responseType === "raw" || responseType === "arraybuffer" || responseType === "stream") {
+    if (
+        SKIPPABLE_RESPONSE_TYPES.includes(responseType) ||
+        responseType === "arraybuffer" ||
+        response.cache.pulled
+    ) {
         return Promise.resolve(response);
     }
 
