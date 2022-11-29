@@ -1,7 +1,13 @@
-import type { InternalConfiguration, UrbexResponse } from "../../exportable-types";
+import type {
+    InternalConfiguration,
+    UrbexResponse,
+    RequestExecutor,
+    ResponseExecutor
+} from "../../exportable-types";
 import type { DispatchedResponse, RequestAPIResponse } from "../../types";
 
-import { deepMerge, clone, isEmpty } from "../../utils";
+import { PipelineExecutor } from "../pipelines";
+import { deepMerge, isEmpty, deepClone, mutate } from "../../utils";
 import { DEFAULT_URBEX_RESPONSE } from "../constants";
 import { environment } from "../../environment";
 import { UrbexHeaders } from "../../core/headers";
@@ -11,7 +17,7 @@ type ConcludeRequest = (config: RequestAPIResponse) => Promise<DispatchedRespons
 export async function startRequest(config: InternalConfiguration): Promise<ConcludeRequest> {
     const startTime = Date.now();
     const timestamp = new Date().toISOString();
-    const clonedResponse = clone(DEFAULT_URBEX_RESPONSE);
+    const clonedResponse = deepClone(DEFAULT_URBEX_RESPONSE);
 
     if (!isEmpty(config.pipelines.request)) {
         // loop over the request pipelines
@@ -19,55 +25,57 @@ export async function startRequest(config: InternalConfiguration): Promise<Concl
         // each new config is passed to the next pipeline
         // the very last config will mutate the `config` parameter
 
-        for (const pipeline of config.pipelines.request) {
-            config = await pipeline.execute(config);
-
-            if (config === null) {
-                throw new Error(
-                    "Urbex expected a valid configuration to be returned from a request pipeline, but got null."
-                );
-            }
-        }
+        await PipelineExecutor.process(config, config.pipelines.request);
     }
 
     return async function concludeRequest(result): Promise<DispatchedResponse> {
-        const incomingResult = result;
-
-        let response = deepMerge(clonedResponse, {
-            data: incomingResult.data,
+        let incomingResult = deepMerge(clonedResponse, {
+            data: result.data,
             config: config,
-            request: incomingResult.request,
-            response: incomingResult.response,
+            request: result.request || {},
+            response: result.response || {},
             timestamp: timestamp,
-            responseType: config.responseType
+            responseType: config.responseType,
+            cache: result.cache || {}
         });
 
-        if (incomingResult.response) {
-            response.headers = incomingResult.response.headers;
+        if (incomingResult.cache && incomingResult.cache.hit) {
+            const statusCode = 200;
+            const statusText = "Pulled from internal cache";
 
             if (environment.isNode) {
-                response.status = incomingResult.response.statusCode;
-                response.statusText = incomingResult.response.statusMessage;
+                incomingResult.response.statusCode = statusCode;
+                incomingResult.response.statusMessage = statusText;
             } else {
-                const parsedHeaders = UrbexHeaders.parse(response.headers);
+                incomingResult.response.status = statusCode;
+                incomingResult.response.statusText = statusText;
+            }
+        }
 
-                response.headers = parsedHeaders;
+        if (incomingResult.response) {
+            incomingResult.headers = incomingResult.response.headers;
 
-                response.status = incomingResult.response.status;
-                response.statusText = incomingResult.response.statusText;
+            if (environment.isNode) {
+                incomingResult.status = incomingResult.response.statusCode;
+                incomingResult.statusText = incomingResult.response.statusMessage;
+            } else {
+                const parsedHeaders = UrbexHeaders.parse(incomingResult.headers);
+
+                incomingResult.headers = parsedHeaders;
+
+                incomingResult.status = incomingResult.response.status;
+                incomingResult.statusText = incomingResult.response.statusText;
             }
         }
 
         if (!isEmpty(config.pipelines.response)) {
-            for (const pipeline of config.pipelines.response) {
-                response = await pipeline.execute(response);
-            }
+            await PipelineExecutor.process(incomingResult, config.pipelines.response);
         }
 
         const endTime = Date.now();
         const duration = endTime - startTime;
 
-        response.duration = duration;
-        return Promise.resolve(response);
+        incomingResult.duration = duration;
+        return Promise.resolve(incomingResult);
     };
 }
