@@ -73,10 +73,6 @@ function createMethodConfig(method: Methods, uri: UrbexURL, config: UrbexConfig)
 
 export class UrbexClient extends RequestApi {
     private $config: RequestConfig;
-    private $pipelines: PipelineExecutorsManager = {
-        request: [],
-        response: []
-    };
 
     constructor(config?: UrbexConfig) {
         super();
@@ -104,6 +100,13 @@ export class UrbexClient extends RequestApi {
      */
     get cache(): Readonly<CacheClock> {
         return this.$cache;
+    }
+
+    /**
+     * Reset the configuration to default values.
+     */
+    public reset(): void {
+        this.$config.reset();
     }
 
     /**
