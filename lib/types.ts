@@ -11,6 +11,25 @@ import type {
     ResponseExecutor
 } from "./exportable-types";
 
+export interface ResponseCachable {
+    /**
+     * The key that was used to pull the response from the cache.
+     */
+    key: string;
+    /**
+     * If the cache was hit during the request.
+     */
+    hit: boolean;
+    /**
+     * If the request had an active response in the cache.
+     */
+    pulled: boolean;
+    /**
+     * If the `NEW` response was stored in the cache.
+     */
+    stored: boolean;
+}
+
 /**
  * The response that is returned by the request api.
  */
@@ -18,6 +37,7 @@ export interface RequestAPIResponse {
     data?: any;
     request?: any;
     response?: any;
+    cache?: ResponseCachable;
 }
 
 /**
