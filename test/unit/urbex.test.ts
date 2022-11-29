@@ -153,6 +153,25 @@ describe("UrbexClient", () => {
             chai.expect(client.cache.isRunning).to.equal(false);
             chai.expect(client.config.cache.enabled).to.equal(false);
         });
+
+        it("should be separate for each client instance", () => {
+            const client2 = new urbex.Client();
+
+            client2.configure({
+                cache: {
+                    enabled: true
+                }
+            });
+
+            client2.cache.set("foo", "bar");
+
+            chai.expect(client.cache.get("foo")).to.equal(undefined);
+            chai.expect(client2.cache.get("foo").v).to.equal("bar");
+            chai.expect(client.cache.isRunning).to.equal(false);
+            chai.expect(client2.cache.isRunning).to.equal(true);
+
+            client2.cache.stop();
+        });
     });
 
     describe("isolated clients", () => {
