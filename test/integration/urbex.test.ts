@@ -191,10 +191,11 @@ describe("client", () => {
         it("should retrieve the response from the cache", async () => {
             client.configure({
                 cache: {
-                    enabled: true,
-                    autoStart: false
+                    enabled: true
                 }
             });
+
+            await client.get(`${SERVER_URL}/text`);
 
             const response = await client.get(`${SERVER_URL}/text`);
 
@@ -210,12 +211,13 @@ describe("client", () => {
         it("pipeline executors should still be executed", async () => {
             client.configure({
                 cache: {
-                    enabled: true,
-                    autoStart: false
+                    enabled: true
                 }
             });
 
             let pipelineExecuted = false;
+
+            await client.get(`${SERVER_URL}/text`);
 
             const response = await client.get(`${SERVER_URL}/text`, {
                 pipelines: {

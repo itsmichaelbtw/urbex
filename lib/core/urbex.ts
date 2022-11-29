@@ -77,7 +77,11 @@ export class UrbexClient extends RequestApi {
     constructor(config?: UrbexConfig) {
         super();
 
-        this.$config = new RequestConfig(config);
+        this.$config = new RequestConfig();
+
+        if (isObject(config) && !isEmpty(config)) {
+            this.configure(config);
+        }
     }
 
     /**
@@ -103,13 +107,6 @@ export class UrbexClient extends RequestApi {
     }
 
     /**
-     * Reset the configuration to default values.
-     */
-    public reset(): void {
-        this.$config.reset();
-    }
-
-    /**
      * Configures the UrbexClient. You are free to call this method as
      * many times as you want. All configurations will be merged together.
      *
@@ -119,19 +116,33 @@ export class UrbexClient extends RequestApi {
         const configuration = this.$config.createConfigurationObject(config, false);
         this.$config.set(configuration);
 
-        if (isEmpty(configuration.cache)) {
-            if (this.$cache) {
-                this.$cache.clear();
+        const cache = this.$cache;
 
-                if (this.$cache.isRunning) {
-                    this.$cache.stop();
+        function stopCache(): void {
+            if (cache) {
+                cache.clear();
+
+                if (cache.isRunning) {
+                    cache.stop();
                 }
             }
-        } else {
-            this.$cache.configure(configuration.cache);
+        }
 
-            if (!this.$cache.isRunning) {
-                this.$cache.start();
+        function startCache(): void {
+            if (!cache || !cache.isRunning) {
+                cache.start();
+            }
+        }
+
+        if (isEmpty(configuration.cache)) {
+            stopCache();
+        } else {
+            cache.configure(configuration.cache);
+
+            if (configuration.cache.enabled) {
+                startCache();
+            } else if (configuration.cache.enabled === false) {
+                stopCache();
             }
         }
     }
@@ -160,6 +171,21 @@ export class UrbexClient extends RequestApi {
     public subscribe() {}
 
     public unsubscribe(): void {}
+
+    /**
+     * Reset the configuration to default values.
+     */
+    public reset(): void {
+        if (this.$cache) {
+            this.$cache.clear();
+
+            if (this.$cache.isRunning) {
+                this.$cache.stop();
+            }
+        }
+
+        this.$config.reset();
+    }
 }
 
 forEach(["delete", "get", "head", "options"], (_, value: MethodsLower) => {
