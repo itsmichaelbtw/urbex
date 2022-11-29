@@ -11,6 +11,9 @@ module.exports = (config) => {
             },
             {
                 pattern: testGlob
+            },
+            {
+                pattern: "test/constants.ts"
             }
         ],
         plugins: [
@@ -22,7 +25,8 @@ module.exports = (config) => {
         ],
         preprocessors: {
             [libGlobal]: ["karma-typescript"],
-            [testGlob]: ["karma-typescript"]
+            [testGlob]: ["karma-typescript"],
+            "test/constants.ts": ["karma-typescript"]
         },
         reporters: ["progress", "karma-typescript"],
         browsers: ["ChromeHeadless" /*"FirefoxHeadless"*/],
