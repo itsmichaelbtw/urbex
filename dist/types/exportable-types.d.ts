@@ -1,5 +1,5 @@
 import type { UrbexHeaders } from "./core/headers";
-import type { BaseConfiguration, SearchParams, Headers, ResponseTypes } from "./types";
+import type { BaseConfiguration, SearchParams, Headers, ResponseTypes, ResponseCachable } from "./types";
 /**
  * The callback to provide when creating a new pipeline executor for a request.
  */
@@ -89,24 +89,7 @@ export interface UrbexResponse<D = any> {
     /**
      * An object indicating its interaction with the cache.
      */
-    cache: {
-        /**
-         * The key that was used to pull the response from the cache.
-         */
-        key: string;
-        /**
-         * If the cache was hit during the request.
-         */
-        hit: boolean;
-        /**
-         * If the request had an active response in the cache.
-         */
-        pulled: boolean;
-        /**
-         * If the `NEW` response was stored in the cache.
-         */
-        stored: boolean;
-    };
+    cache: ResponseCachable;
     /**
      * The response type that was used to make the request.
      */

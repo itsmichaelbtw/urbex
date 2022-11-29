@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/orison-networks/urbex/compare/v1.1.0...v1.2.0) (2022-11-29)
+
+
+### What's New
+
+* **browser:** browser requests are now supported ([3315a22](https://github.com/orison-networks/urbex/commit/3315a2213f9d3334e8b24579073c96aed180a416))
+* **core:** urbex now supports `XHR` requests for browser environments ([77f0913](https://github.com/orison-networks/urbex/commit/77f091398296c58c36a4bed9f117401fc8e2b9d7))
+* **errors:** refactored error classes for better error handling ([cfe80d5](https://github.com/orison-networks/urbex/commit/cfe80d55b146ee1e6c35ddc9e7b33fb8e6012129))
+* **headers:** added `parse` operation to convert strings into an object ([cac69de](https://github.com/orison-networks/urbex/commit/cac69de1e126be99eb000afa5d03dd931a4b63f3))
+* support to reset the configuration to defaults ([41a48b6](https://github.com/orison-networks/urbex/commit/41a48b69d9aa31c0b7d15a7fa9240ee6e344f7f6))
+* **urbex:** added `resolveStatus` property to alter request destinations ([9a3d2b2](https://github.com/orison-networks/urbex/commit/9a3d2b2097a94527e9195a6366e1bf54de02b930))
+
+
+### Fixed
+
+* cloning objects was causing mutation issues to global constants ([40cdf0e](https://github.com/orison-networks/urbex/commit/40cdf0e970a7f5c891e3fd13b293bec798fbda64))
+* **headers:** using `has()` to check if a key exists does not parse the header key correctly ([b31f114](https://github.com/orison-networks/urbex/commit/b31f11445410413a18fa7f7b25fdbf233301c628))
+* internal cache not stopping when re-configuring the client or when calling `reset()` ([80cc927](https://github.com/orison-networks/urbex/commit/80cc9276b698ab9ae81c1bc4522138e3f238cb97))
+* **transformers:** parsing strings using `JSON.parse` threw unnecessary errors ([5774d5b](https://github.com/orison-networks/urbex/commit/5774d5b461b07eec0264cb921cee35533d219af7))
+* **transformers:** xhr requests incorrectly parsing JSON response types ([c75376b](https://github.com/orison-networks/urbex/commit/c75376b80c82eafec6e138f24c4e0728ce87f0d9))
+* uri parsing incorrectly extracting protocols ([0e6eea8](https://github.com/orison-networks/urbex/commit/0e6eea8049cf59a1b43f7d852a0d928ed48b9734))
+
 ## [1.1.0](https://github.com/orison-networks/urbex/compare/v1.0.0...v1.1.0) (2022-11-21)
 
 

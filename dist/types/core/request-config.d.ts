@@ -2,6 +2,7 @@ import type { InternalConfiguration, UrbexConfig } from "../exportable-types";
 export declare class RequestConfig {
     private $config;
     constructor(config?: UrbexConfig);
+    private setup;
     defaultConfig(): InternalConfiguration;
     createConfigurationObject(config: UrbexConfig, allowEndpoints: boolean): InternalConfiguration;
     parseIncomingConfig(config: UrbexConfig, allowEndpoints: boolean): Partial<InternalConfiguration>;

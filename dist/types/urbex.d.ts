@@ -1,6 +1,10 @@
 import type { UrbexConfig } from "./exportable-types";
 import { Environment } from "./environment";
 import { UrbexClient } from "./core/urbex";
+/**
+ * The extended client that has other methods attached to it
+ * that are not part of the core client.
+ */
 export interface ExtendedUrbexClient extends UrbexClient {
     /**
      * Create a new isolated instance of the Urbex client

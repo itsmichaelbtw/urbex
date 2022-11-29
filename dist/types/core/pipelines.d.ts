@@ -3,6 +3,7 @@ type Parameters<T extends Function> = T extends (config: infer P) => any ? P : n
 export declare class PipelineExecutor<T extends Function> {
     private $executor;
     constructor(executor: T);
+    static process<T, D extends Function>(config: T, pipelines: PipelineExecutor<D>[]): Promise<void>;
     execute(config: Parameters<T>): ReturnType<T>;
 }
 export {};

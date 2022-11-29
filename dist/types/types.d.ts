@@ -2,6 +2,24 @@
 import type { ClockOptions } from "cache-clock";
 import type { PipelineExecutor } from "./core/pipelines";
 import type { UrbexResponse, InternalConfiguration, RequestExecutor, ResponseExecutor } from "./exportable-types";
+export interface ResponseCachable {
+    /**
+     * The key that was used to pull the response from the cache.
+     */
+    key: string;
+    /**
+     * If the cache was hit during the request.
+     */
+    hit: boolean;
+    /**
+     * If the request had an active response in the cache.
+     */
+    pulled: boolean;
+    /**
+     * If the `NEW` response was stored in the cache.
+     */
+    stored: boolean;
+}
 /**
  * The response that is returned by the request api.
  */
@@ -9,6 +27,7 @@ export interface RequestAPIResponse {
     data?: any;
     request?: any;
     response?: any;
+    cache?: ResponseCachable;
 }
 /**
  * An type representing an object.
@@ -41,12 +60,9 @@ export type MethodsLower = "get" | "post" | "put" | "delete" | "patch" | "head" 
 export type Methods = MethodsUpper | MethodsLower;
 export type RequestUrlPath = string;
 /**
- * The execution manager for the request pipeline.
+ * A function that determines if the response should resolve or reject.
  */
-export interface PipelineExecutorsManager {
-    request?: PipelineExecutor<RequestExecutor>[];
-    response?: PipelineExecutor<ResponseExecutor>[];
-}
+export type ResolveStatus = (config: InternalConfiguration, status: number) => boolean;
 /**
  * The resolved callback when a request has been fulfilled.
  */
@@ -55,6 +71,13 @@ export type DispatchedResponse = Promise<UrbexResponse>;
  * The resolved callback when the request api has been made.
  */
 export type DispatchedAPIRequest = Promise<RequestAPIResponse>;
+/**
+ * The execution manager for the request pipeline.
+ */
+export interface PipelineExecutorsManager {
+    request?: PipelineExecutor<RequestExecutor>[];
+    response?: PipelineExecutor<ResponseExecutor>[];
+}
 /**
  * The base configuration object.
  */
@@ -122,6 +145,13 @@ export interface BaseConfiguration<D = any> {
      * Defaults to `utf8`.
      */
     responseEncoding: BufferEncoding;
+    /**
+     * A function that determines whether the request should be considered
+     * successful or not.
+     *
+     * Provides the `InternalConfiguration` object and `status` code.
+     */
+    resolveStatus: ResolveStatus;
 }
 /**
  * The underlying request api that powers the client.

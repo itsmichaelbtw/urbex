@@ -8,6 +8,7 @@ export declare const DEFAULT_NODE_HEADERS: {
 } & {
     "User-Agent": string;
 };
+export declare const REQUEST_BODY_METHODS: string[];
 export declare const DEFAULT_URI_COMPONENT: URIComponent;
 export declare const DEFAULT_PIPELINE_EXECUTORS: PipelineExecutorsManager;
 export declare const DEFAULT_CLIENT_OPTIONS: InternalConfiguration;

@@ -4,6 +4,10 @@ export declare class UrbexHeaders {
     protected $headers: NormalizedHeaders;
     constructor(headers?: Headers, withDefaults?: boolean);
     static construct(headers?: Headers, withDefaults?: boolean): UrbexHeaders;
+    /**
+     * Parse a headers string into an object
+     */
+    static parse(headers: string): NormalizedHeaders;
     get defaults(): typeof DEFAULT_NODE_HEADERS | typeof DEFAULT_BROWSER_HEADERS;
     /**
      * Set a header configuration to use for all requests made by the current

@@ -36,7 +36,6 @@ export interface UrbexClient {
 }
 export declare class UrbexClient extends RequestApi {
     private $config;
-    private $pipelines;
     constructor(config?: UrbexConfig);
     /**
      *
@@ -46,11 +45,11 @@ export declare class UrbexClient extends RequestApi {
     /**
      * Current, and most up-to-date configuration of the UrbexClient.
      */
-    get config(): InternalConfiguration;
+    get config(): Readonly<InternalConfiguration>;
     /**
      * The internal cache module.
      */
-    get cache(): CacheClock;
+    get cache(): Readonly<CacheClock>;
     /**
      * Configures the UrbexClient. You are free to call this method as
      * many times as you want. All configurations will be merged together.
@@ -73,6 +72,10 @@ export declare class UrbexClient extends RequestApi {
      */
     subscribe(): void;
     unsubscribe(): void;
+    /**
+     * Reset the configuration to default values.
+     */
+    reset(): void;
 }
 export declare function isUrbexClient(client: unknown): client is UrbexClient;
 export {};
