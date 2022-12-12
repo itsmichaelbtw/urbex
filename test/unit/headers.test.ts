@@ -154,6 +154,23 @@ describe("headers", () => {
                 "X-Baz": "FOO"
             });
         });
+
+        it("should not set undefined headers", () => {
+            const object = {
+                "x-foo": "bar",
+                "x-bar": undefined
+            };
+
+            headers.set(object, false);
+
+            const result = headers.get();
+
+            chai.expect(result).to.deep.equal({
+                "X-Foo": "bar"
+            });
+
+            chai.expect(Object.keys(result)).to.have.lengthOf(1);
+        });
     });
 
     describe("get()", () => {
