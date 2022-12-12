@@ -5,7 +5,7 @@ import cors from "cors";
 import express from "express";
 
 import { ensureLeadingToken, lowercase } from "../lib/utils";
-import { METHODS } from "../lib/constants";
+import { METHODS } from "../lib/core/constants";
 import { MethodsUpper, MethodsLower } from "../lib/types";
 
 type ExpressCallback = (
