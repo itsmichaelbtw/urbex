@@ -12,7 +12,7 @@ import type { DispatchedResponse, UrbexRequestApi, DispatchedAPIRequest } from "
 
 import { resolveRequest } from "./resolve-request";
 import { UrbexError, TimeoutError, NetworkError } from "../error";
-import { combinedStringss, isString, ensureTrailingToken, isFunction } from "../../utils";
+import { combineStrings, isString, ensureTrailingToken, isFunction } from "../../utils";
 
 export class NodeRequest implements UrbexRequestApi {
     private getAgentFromProtocol(protocol: string): typeof http | typeof https {
@@ -45,27 +45,17 @@ export class NodeRequest implements UrbexRequestApi {
                 config.headers.set({ "Accept-Encoding": "gzip, deflate, br" });
             }
 
-            if (config.url.params && !isString(config.url.params)) {
-                config.url.params = config.url.params.toString();
-            } else {
-                config.url.params = "";
-            }
-
             const options: https.RequestOptions | url.URL = {
                 protocol: ensureTrailingToken(":", config.url.protocol),
                 href: config.url.href,
                 hostname: config.url.hostname,
-                path: combinedStringss("", config.url.endpoint, config.url.params),
+                path: combineStrings("", config.url.pathname, config.url.search),
                 headers: config.headers.get(),
                 timeout: config.timeout
             };
 
             if (config.url.port) {
-                const port = parseInt(config.url.port.toString());
-
-                if (!isNaN(port)) {
-                    options.port = port;
-                }
+                options.port = config.url.port;
             }
 
             const request = agent.request(options);
