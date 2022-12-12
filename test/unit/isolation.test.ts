@@ -54,11 +54,16 @@ describe("isolation", () => {
 
         it("should create a new instance and accept a configuration object", () => {
             const client = new urbex.Client({
+                url: "https://example.com:8080/api/v1",
                 method: "POST",
                 data: "Hello, world!"
             });
 
             chai.expect(client).to.be.an.instanceOf(urbex.Client);
+            chai.expect(client.config.url.href).to.equal("https://example.com:8080/api/v1");
+            chai.expect(client.config.url.hostname).to.equal("example.com");
+            chai.expect(client.config.url.port).to.equal(8080);
+            chai.expect(client.config.url.pathname).to.equal("/api/v1");
             chai.expect(client.config.method).to.equal("POST");
             chai.expect(client.config.data).to.equal("Hello, world!");
             chai.expect(client.config.pipelines.request).to.have.lengthOf(1);
