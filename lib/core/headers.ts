@@ -16,7 +16,14 @@ import {
 } from "../utils";
 import { debug } from "../debug";
 import { environment } from "../environment";
-import { DEFAULT_BROWSER_HEADERS, DEFAULT_NODE_HEADERS } from "./constants";
+
+const DEFAULT_BROWSER_HEADERS = {
+    "Content-Type": "application/json"
+};
+
+const DEFAULT_NODE_HEADERS = merge(DEFAULT_BROWSER_HEADERS, {
+    "User-Agent": `UrbexClient (Node.js ${environment.process.version}; ${environment.process.platform})`
+});
 
 function removeNewLines(value: string): string {
     return stringReplacer(value, "\n", "");
