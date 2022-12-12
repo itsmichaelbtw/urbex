@@ -4,16 +4,22 @@ import { PORT, SERVER_URL } from "../constants";
 
 import urbex, { PipelineExecutor } from "../../lib/urbex";
 
-const client = urbex.isolateClient();
+const client = urbex.isolateClient({
+    url: SERVER_URL
+});
 
 describe("errors", () => {
     beforeEach(() => {
         client.reset();
+
+        client.configure({
+            url: SERVER_URL
+        });
     });
 
     it("should catch errors", async () => {
         try {
-            await client.get(`${SERVER_URL}/404`);
+            await client.get("/404");
         } catch (error) {
             chai.expect(error).to.be.an.instanceOf(Error);
             chai.expect(error.status).to.equal(404);
@@ -27,7 +33,7 @@ describe("errors", () => {
 
     it("the configuration object should be apart of the error", async () => {
         try {
-            await client.get(`${SERVER_URL}/404`, {
+            await client.get("/404", {
                 responseType: "text",
                 responseEncoding: "ascii"
             });
@@ -40,7 +46,7 @@ describe("errors", () => {
 
     it("should catch errors from the pipeline", async () => {
         try {
-            await client.get(`${SERVER_URL}/404`, {
+            await client.get("/404", {
                 pipelines: {
                     request: [
                         new PipelineExecutor(() => {
@@ -57,7 +63,7 @@ describe("errors", () => {
 
     it("should throw a TimeoutError", async () => {
         try {
-            await client.get(`${SERVER_URL}/delay/250`, {
+            await client.get("/delay/250", {
                 timeout: 100
             });
         } catch (error) {
@@ -67,13 +73,13 @@ describe("errors", () => {
         }
     });
 
-    // it("should throw a NetworkError", async (done) => {
-    //     try {
-    //         await client.get("http://localhost:9999");
-    //     } catch (error) {
-    //         chai.expect(error).to.be.an.instanceOf(Error);
-    //         chai.expect(error.name).to.equal("NetworkError");
-    //         chai.expect(error.message).to.equal("Network Error");
-    //     }
-    // });
+    it("should throw a NetworkError", async () => {
+        try {
+            await client.get("http://localhost:9999");
+        } catch (error) {
+            chai.expect(error).to.be.an.instanceOf(Error);
+            chai.expect(error.name).to.equal("NetworkError");
+            chai.expect(error.message).to.include("connect ECONNREFUSED");
+        }
+    });
 });
