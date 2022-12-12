@@ -82,13 +82,5 @@ describe("environment", () => {
         chai.expect(envComponent.protocol).to.equal("http");
         chai.expect(envComponent.hostname).to.equal("localhost");
         chai.expect(envComponent.port).to.equal(3000);
-
-        envAgent.set("PORT", "8080");
-
-        const parser2 = environment.getEnvironmentComponent();
-
-        chai.expect(parser2.toJSON().port).to.equal(8080);
-
-        envAgent.delete("PORT");
     });
 });
