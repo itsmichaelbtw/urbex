@@ -56,6 +56,10 @@ export function isFunction(value: unknown): value is Function {
     return typeof value === "function";
 }
 
+export function isNumber(value: unknown): value is number {
+    return typeof value === "number";
+}
+
 export function isEmpty(value: any): boolean {
     if (isArray(value)) {
         return value.length === 0;
@@ -112,8 +116,24 @@ export function deepClone<T>(value: T): T {
     }
 }
 
-export function merge<P = any, T = any>(defaultOptions: P, options: T): P & T {
-    return Object.assign({}, defaultOptions, options);
+export function merge<P = any, T = any>(
+    defaultOptions: P,
+    options: T,
+    strict: boolean = false
+): P & T {
+    if (strict) {
+        const filteredOptions = keys(options).reduce((acc, key) => {
+            if (options[key]) {
+                acc[key] = options[key];
+            }
+
+            return acc;
+        }, {} as T);
+
+        return Object.assign({}, defaultOptions, filteredOptions);
+    } else {
+        return Object.assign({}, defaultOptions, options);
+    }
 }
 
 export function deepMerge<T extends IObject[]>(...objects: T): UnionToIntersection<T[any]> {
@@ -217,7 +237,7 @@ export function argumentIsNotProvided(value: unknown): boolean {
     return value === undefined || value === null;
 }
 
-export function combinedStringss(delimiter = "", ...strings: string[]): string {
+export function combineStrings(delimiter = "", ...strings: string[]): string {
     return strings.filter((string) => !isEmpty(string)).join(delimiter);
 }
 
@@ -249,12 +269,12 @@ export function safeJSONParse(value: string, returnValueOnError = false): any {
     }
 }
 
-export function createEmptyScheme<T>(keys: string[]): T {
+export function createEmptyScheme<T>(keys: string[], value = null): T {
     return keys.reduce((acc, key) => {
         const keys = key.split(".");
 
         if (keys.length === 1) {
-            acc[key] = null;
+            acc[key] = value;
         } else {
             const [object, ...nestedKeys] = keys;
 
