@@ -1,3 +1,5 @@
+import { URLParser } from "./core/parsers/url-parser";
+
 export type UrbexContext = "browser" | "node";
 
 export class Environment {
@@ -55,6 +57,17 @@ export class Environment {
         this.nodeStrictCheck();
 
         return process.env.NODE_ENV === "production";
+    }
+
+    public getEnvironmentComponent(): URLParser {
+        if (this.isBrowser) {
+            return URLParser.parse(window.location.href);
+        } else {
+            const port = process.env.PORT || "3000";
+            const parsed = URLParser.parse(`http://localhost:${port}`);
+
+            return parsed;
+        }
     }
 }
 
