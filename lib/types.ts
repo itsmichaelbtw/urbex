@@ -5,47 +5,12 @@ import type { UrbexHeaders } from "./core/headers";
 import type { UrbexError } from "./core/error";
 import type {
     UrbexURL,
+    URLComponent,
     UrbexResponse,
     InternalConfiguration,
     RequestExecutor,
     ResponseExecutor
 } from "./exportable-types";
-
-export interface ResponseCachable {
-    /**
-     * The key that was used to pull the response from the cache.
-     */
-    key: string;
-    /**
-     * If the cache was hit during the request.
-     */
-    hit: boolean;
-    /**
-     * If the request had an active response in the cache.
-     */
-    pulled: boolean;
-    /**
-     * If the `NEW` response was stored in the cache.
-     */
-    stored: boolean;
-}
-
-/**
- * The response that is returned by the request api.
- */
-export interface RequestAPIResponse {
-    data?: any;
-    request?: any;
-    response?: any;
-    cache?: ResponseCachable;
-}
-
-/**
- * An type representing an object.
- */
-export interface IObject<V = any> {
-    [key: string]: V;
-}
 
 /**
  * Available response types for the request.
@@ -58,6 +23,23 @@ export type ResponseTypes =
     | "text"
     | "stream"
     | "raw";
+
+export type Port = number | string;
+
+/**
+ * The URL component after parsing.
+ */
+export type ParsedURLComponent = URLComponent<string, number>;
+
+/**
+ * A type representing the `URL` object when attempting to serialize the object.
+ */
+export type SerializeComponent = Partial<URLComponent>;
+
+/**
+ * Enforce required properties on the `URL` object.
+ */
+export type EnforceComponent = URLComponent;
 
 /**
  * User provided values for headers.
@@ -72,9 +54,13 @@ export type NormalizedHeaders = Record<string, string>;
  */
 export type Headers = Record<string, HeaderValues>;
 /**
- * Search parameters object passed to the `url.params` property.
+ * Search parameters object passed to the `url.search` property.
  */
-export type SearchParams = URLSearchParams | Record<string, any> | string | null;
+export type CustomSearchParams =
+    | [string, string | number | boolean | null | undefined][]
+    | Record<string, any>
+    | string
+    | null;
 
 export type MethodsUpper = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS";
 export type MethodsLower = "get" | "post" | "put" | "delete" | "patch" | "head" | "options";
@@ -96,6 +82,42 @@ export type DispatchedResponse = Promise<UrbexResponse>;
  * The resolved callback when the request api has been made.
  */
 export type DispatchedAPIRequest = Promise<RequestAPIResponse>;
+
+export interface ResponseCachable {
+    /**
+     * The key that was used to pull the response from the cache.
+     */
+    key: string;
+    /**
+     * If the cache was hit during the request.
+     */
+    hit: boolean;
+    /**
+     * If the request had an active response in the cache.
+     */
+    pulled: boolean;
+    /**
+     * If the `new` response was stored in the cache.
+     */
+    stored: boolean;
+}
+
+/**
+ * The response that is returned by the request api.
+ */
+export interface RequestAPIResponse {
+    data?: any;
+    request?: any;
+    response?: any;
+    cache?: ResponseCachable;
+}
+
+/**
+ * An type representing an object.
+ */
+export interface IObject<V = any> {
+    [key: string]: V;
+}
 
 /**
  * The execution manager for the request pipeline.

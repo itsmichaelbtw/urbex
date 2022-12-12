@@ -1,8 +1,9 @@
-import type { InternalConfiguration, UrbexConfig, URIComponent } from "../exportable-types";
+import type { InternalConfiguration, UrbexConfig, UrbexURL } from "../exportable-types";
 
 import { UrbexHeaders } from "./headers";
 import { transformRequestData, transformResponseData, decodeResponseData } from "./transformers";
 import { environment } from "../environment";
+import { URLParser } from "./parsers/url-parser";
 import {
     isObject,
     merge,
@@ -17,37 +18,54 @@ import {
     isEmpty,
     isFunction
 } from "../utils";
-import { isValidURL, serializeParams, parseURIIntoComponent } from "./url";
-import { PROTOCOL_REGEXP, HOSTNAME_REGEXP, METHODS } from "../constants";
+import { METHODS } from "./constants";
 import {
     DEFAULT_CLIENT_OPTIONS,
     DEFAULT_PIPELINE_EXECUTORS,
-    DEFAULT_URI_COMPONENT
+    DEFAULT_URL_COMPONENT
 } from "./constants";
 
-function determineAppropriateURI(): URIComponent {
-    const component = merge(DEFAULT_URI_COMPONENT, {
-        protocol: "https",
-        urlMount: "/api"
-    });
-
-    if (environment.isBrowser) {
-        const { protocol, hostname, port } = window.location;
-
-        Object.assign(component, {
-            protocol: protocol.replace(":", ""),
-            hostname: hostname,
-            port: port
-        });
-    } else if (environment.isNode) {
-        Object.assign(component, {
-            protocol: "http",
-            hostname: "localhost",
-            port: 3000
-        });
+function isPathname(pathname: string): boolean {
+    if (!pathname.startsWith("//") && pathname.startsWith("/")) {
+        return true;
     }
 
-    return component;
+    return false;
+}
+
+function manageURLComponent(this: URLParser, component: UrbexURL, allowEndpoints: boolean): void {
+    if (isString(component)) {
+        const hasPathname = isPathname(component);
+
+        if (hasPathname) {
+            if (allowEndpoints) {
+                this.pathname = component;
+            } else {
+                throw new Error(
+                    "A valid URL string in the format of <scheme>://<hostname> must be passed when using `urbex.configure()`."
+                );
+            }
+        } else {
+            this.parse(component);
+        }
+    } else {
+        // the serializer always uses the origin if passed
+        // however this conflicts if the configuration method
+        // is called multiple times attempting to change
+        // components of the URL. By default, the origin will always
+        // be present since it was parsed previously and will fail to
+        // adjust the other components.
+
+        // to fix this, if the origin is not passed, we will
+        // set it to an empty string so that the serializer
+        // will not use it.
+
+        if (component.origin === undefined) {
+            component.origin = "";
+        }
+
+        component.href ? this.parse(component.href) : this.set(component).serialize(this.toJSON());
+    }
 }
 
 export class RequestConfig {
@@ -62,7 +80,7 @@ export class RequestConfig {
     }
 
     private setup(): void {
-        const component = parseURIIntoComponent(determineAppropriateURI());
+        const envComponent = environment.getEnvironmentComponent();
 
         const pipelines = deepClone(DEFAULT_PIPELINE_EXECUTORS);
 
@@ -74,7 +92,7 @@ export class RequestConfig {
         }
 
         const configuration = deepMerge(DEFAULT_CLIENT_OPTIONS, {
-            url: component,
+            url: envComponent,
             headers: new UrbexHeaders(),
             pipelines: pipelines
         });
@@ -84,7 +102,7 @@ export class RequestConfig {
 
     public defaultConfig(): InternalConfiguration {
         return merge(DEFAULT_CLIENT_OPTIONS, {
-            url: parseURIIntoComponent(determineAppropriateURI()),
+            url: {},
             headers: new UrbexHeaders()
         });
     }
@@ -107,25 +125,26 @@ export class RequestConfig {
             throw new Error("The configuration must be an object with valid properties.");
         }
 
+        if (isEmpty(config)) {
+            return {};
+        }
+
+        const currentConfig = this.get();
         const configuration = clone(config);
 
+        const clonedUrl = clone(currentConfig.url.toJSON());
+        const parser = new URLParser();
+
+        parser.set(clonedUrl);
+
         if (hasOwnProperty(configuration, "url")) {
-            const currentUrlConfig = this.get().url;
+            const url = configuration.url;
 
-            if (isObject(configuration.url)) {
-                // have to merge otherwise the uri parser may
-                // throw an error if fewer values are provided
-                configuration.url = merge(currentUrlConfig, configuration.url);
+            if (!isString(url) && !isObject(url)) {
+                throw new Error("The url property must be a string or an object.");
             }
 
-            if (allowEndpoints && configuration.url.toString().startsWith("/")) {
-                configuration.url = merge(currentUrlConfig, {
-                    endpoint: configuration.url
-                });
-            }
-
-            const parsed = parseURIIntoComponent(configuration.url, allowEndpoints);
-            configuration.url = parsed;
+            manageURLComponent.call(parser, url, allowEndpoints);
         }
 
         if (hasOwnProperty(configuration, "method")) {
@@ -138,18 +157,13 @@ export class RequestConfig {
             configuration.method = method;
         }
 
-        const timeout = parseInt(
-            configuration.timeout?.toString() ?? DEFAULT_CLIENT_OPTIONS.timeout.toString()
-        );
+        const timeout = parseInt(configuration.timeout?.toString(), 10);
 
         if (isNaN(timeout)) {
             configuration.timeout = DEFAULT_CLIENT_OPTIONS.timeout;
         }
 
-        const maxContentLength = parseInt(
-            configuration.maxContentLength?.toString() ??
-                DEFAULT_CLIENT_OPTIONS.maxContentLength.toString()
-        );
+        const maxContentLength = parseInt(configuration.maxContentLength?.toString(), 10);
 
         if (isNaN(maxContentLength)) {
             configuration.maxContentLength = DEFAULT_CLIENT_OPTIONS.maxContentLength;
@@ -160,10 +174,13 @@ export class RequestConfig {
         }
 
         const headers = UrbexHeaders.construct(configuration.headers, true);
-        delete configuration.headers;
 
-        return merge<UrbexConfig>(configuration, {
-            headers: headers
+        delete configuration.headers;
+        delete configuration.url;
+
+        return merge<UrbexConfig, Partial<InternalConfiguration>>(configuration, {
+            headers: headers,
+            url: parser
         });
     }
 
@@ -175,21 +192,31 @@ export class RequestConfig {
     public merge(
         config?: InternalConfiguration | Partial<InternalConfiguration>
     ): InternalConfiguration {
-        if (argumentIsNotProvided(config) || !isObject(config)) {
+        if (argumentIsNotProvided(config) || !isObject(config) || isEmpty(config)) {
             return this.get();
         }
 
         const currentConfig = this.get();
         const incomingHeaders = config.headers?.get() ?? {};
+        const incomingComponent = config.url?.toJSON() ?? {};
 
         const mergedHeaders = merge(currentConfig.headers, incomingHeaders);
+        const mergedComponent = merge(currentConfig.url.toJSON(), incomingComponent);
 
         delete config.headers;
+        delete config.url;
 
         const merged = deepMerge(currentConfig, config);
-        const headersObject = UrbexHeaders.construct(mergedHeaders);
 
-        return merge(merged, { headers: headersObject });
+        const headersObject = UrbexHeaders.construct(mergedHeaders);
+        const componentObject = new URLParser();
+
+        componentObject.set(mergedComponent);
+
+        return merge<InternalConfiguration, Partial<InternalConfiguration>>(merged, {
+            headers: headersObject,
+            url: componentObject
+        });
     }
 
     public get(): InternalConfiguration {
