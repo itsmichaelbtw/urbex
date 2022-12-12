@@ -88,5 +88,7 @@ describe("environment", () => {
         const parser2 = environment.getEnvironmentComponent();
 
         chai.expect(parser2.toJSON().port).to.equal(8080);
+
+        envAgent.delete("PORT");
     });
 });

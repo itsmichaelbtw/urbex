@@ -44,7 +44,7 @@ describe("cache", () => {
 
         chai.expect(response.data).to.equal("This is a text response.");
         chai.expect(response.status).to.equal(200);
-        chai.expect(response.statusText).to.equal("Pulled from internal cache");
+        chai.expect(response.statusText).to.equal("Pulled from internal cache.");
         chai.expect(response.cache.hit).to.be.true;
         chai.expect(response.cache.stored).to.be.false;
         chai.expect(response.cache.pulled).to.be.true;
