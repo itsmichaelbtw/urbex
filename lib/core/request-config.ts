@@ -200,7 +200,7 @@ export class RequestConfig {
         const incomingHeaders = config.headers?.get() ?? {};
         const incomingComponent = config.url?.toJSON() ?? {};
 
-        const mergedHeaders = merge(currentConfig.headers, incomingHeaders);
+        const mergedHeaders = merge(currentConfig.headers.get(), incomingHeaders);
         const mergedComponent = merge(currentConfig.url.toJSON(), incomingComponent);
 
         delete config.headers;
