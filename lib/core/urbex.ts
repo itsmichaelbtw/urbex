@@ -95,14 +95,14 @@ export class UrbexClient extends RequestApi {
     /**
      * Current, and most up-to-date configuration of the UrbexClient.
      */
-    get config(): Readonly<InternalConfiguration> {
+    public get config(): Readonly<InternalConfiguration> {
         return this.$config.get();
     }
 
     /**
      * The internal cache module.
      */
-    get cache(): Readonly<CacheClock> {
+    public get cache(): Readonly<CacheClock> {
         return this.$cache;
     }
 
@@ -189,13 +189,18 @@ export class UrbexClient extends RequestApi {
 }
 
 forEach(["delete", "get", "head", "options"], (_, value: MethodsLower) => {
-    UrbexClient.prototype[value] = function (url: UrbexURL, config?: UrbexMethodRequest) {
+    UrbexClient.prototype[value] = function (
+        this: UrbexClient,
+        url: UrbexURL,
+        config?: UrbexMethodRequest
+    ) {
         return this.send(createMethodConfig(uppercase(value), url, config));
     };
 });
 
 forEach(["post", "put", "patch"], (_, value: MethodsLower) => {
     UrbexClient.prototype[value] = function (
+        this: UrbexClient,
         url: UrbexURL,
         data?: any,
         config?: UrbexMethodRequest

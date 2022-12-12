@@ -12,10 +12,6 @@ import { UrbexError } from "../error";
 import { UrbexHeaders } from "../headers";
 import { clone, deepClone, isUndefined } from "../../utils";
 
-// here all of the interceptors are checked
-// cache clocks are checked here
-// the response is created here
-
 export class RequestApi {
     /**
      * The internal api that is used to send requests.

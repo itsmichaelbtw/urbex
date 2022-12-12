@@ -29,7 +29,7 @@ export async function startRequest(config: InternalConfiguration): Promise<Concl
     }
 
     return async function concludeRequest(result): Promise<DispatchedResponse> {
-        let incomingResult = deepMerge(clonedResponse, {
+        const incomingResult = deepMerge(clonedResponse, {
             data: result.data,
             config: config,
             request: result.request || {},
@@ -41,7 +41,7 @@ export async function startRequest(config: InternalConfiguration): Promise<Concl
 
         if (incomingResult.cache && incomingResult.cache.hit) {
             const statusCode = 200;
-            const statusText = "Pulled from internal cache";
+            const statusText = "Pulled from internal cache.";
 
             if (environment.isNode) {
                 incomingResult.response.statusCode = statusCode;
