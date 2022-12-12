@@ -16,7 +16,7 @@ function checkHeaders(headers: Headers, key: string, value: string) {
     });
 }
 
-describe("UrbexHeaders", () => {
+describe("headers", () => {
     beforeEach(() => {
         headers.clear();
     });
@@ -44,7 +44,7 @@ describe("UrbexHeaders", () => {
         chai.expect(Object.keys(headersObj)).to.have.lengthOf(2);
     });
 
-    describe(".parse() (static)", () => {
+    describe("parse() (static)", () => {
         it("should parse a header string into an object", () => {
             const string = "X-Foo: bar";
 
@@ -80,7 +80,7 @@ describe("UrbexHeaders", () => {
         });
     });
 
-    describe(".defaults", () => {
+    describe("defaults", () => {
         it("should return the default headers (browser)", function () {
             if (environment.isNode) {
                 this.skip();
@@ -105,7 +105,7 @@ describe("UrbexHeaders", () => {
         });
     });
 
-    describe(".set()", () => {
+    describe("set()", () => {
         it("should be able to set headers", () => {
             const object = {
                 "x-foo": "bar",
@@ -156,7 +156,7 @@ describe("UrbexHeaders", () => {
         });
     });
 
-    describe(".get()", () => {
+    describe("get()", () => {
         it("should return the headers", () => {
             const object = {
                 "x-foo": "bar",
@@ -172,7 +172,7 @@ describe("UrbexHeaders", () => {
         });
     });
 
-    describe(".has()", () => {
+    describe("has()", () => {
         it("should return true if the header exists", () => {
             const object = {
                 "x-foo": "bar",
@@ -200,7 +200,7 @@ describe("UrbexHeaders", () => {
         });
     });
 
-    describe(".delete()", () => {
+    describe("delete()", () => {
         it("should delete a header", () => {
             const object = {
                 "x-foo": "bar",
@@ -218,7 +218,7 @@ describe("UrbexHeaders", () => {
         });
     });
 
-    describe(".clear()", () => {
+    describe("clear()", () => {
         it("should clear user defined headers", () => {
             const object = {
                 "x-foo": "bar",
@@ -243,7 +243,7 @@ describe("UrbexHeaders", () => {
         });
     });
 
-    describe(".normalize()", () => {
+    describe("normalize()", () => {
         it("should normalize a header object", () => {
             const object = {
                 "x-foo": "bar",

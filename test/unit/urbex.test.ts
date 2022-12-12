@@ -4,22 +4,13 @@ import urbex from "../../lib/urbex";
 
 import { environment } from "../../lib/environment";
 import { stringReplacer } from "../../lib/utils";
+import { SERVER_URL } from "../constants";
 
 const client = new urbex.Client();
 
-describe("UrbexClient", () => {
+describe("urbex", () => {
     beforeEach(() => {
         client.reset();
-    });
-
-    it("should have http method alias", () => {
-        chai.expect(urbex).to.have.property("get");
-        chai.expect(urbex).to.have.property("post");
-        chai.expect(urbex).to.have.property("put");
-        chai.expect(urbex).to.have.property("patch");
-        chai.expect(urbex).to.have.property("delete");
-        chai.expect(urbex).to.have.property("head");
-        chai.expect(urbex).to.have.property("options");
     });
 
     it("should return the current configuration of the client", () => {
@@ -36,7 +27,7 @@ describe("UrbexClient", () => {
         const config = client.config;
 
         chai.expect(config.method).to.equal("POST");
-        chai.expect(config.url.href).to.equal("https://example.com/");
+        chai.expect(config.url.href).to.equal("https://example.com");
         chai.expect(config.data).to.deep.equal({
             foo: "bar"
         });
@@ -61,7 +52,7 @@ describe("UrbexClient", () => {
         });
 
         chai.expect(client.config.method).to.equal("POST");
-        chai.expect(client.config.url.href).to.equal("https://example.com/");
+        chai.expect(client.config.url.href).to.equal("https://example.com");
         chai.expect(client.cache.options.overwrite).to.equal(true);
 
         client.reset();
@@ -91,7 +82,7 @@ describe("UrbexClient", () => {
         });
 
         chai.expect(client.config.method).to.equal("POST");
-        chai.expect(client.config.url.href).to.equal("https://example.com/");
+        chai.expect(client.config.url.href).to.equal("https://example.com");
         chai.expect(client.cache.options.overwrite).to.equal(true);
 
         client.reset();
@@ -100,6 +91,25 @@ describe("UrbexClient", () => {
         chai.expect(client.config.url.hostname).to.equal("localhost");
         chai.expect(client.config.url.protocol).to.equal("http");
         chai.expect(client.config.url.port).to.equal(3000);
+    });
+
+    it("should default to 'GET' requests", async () => {
+        const response = await client.send({
+            url: `${SERVER_URL}/200`
+        });
+
+        chai.expect(response.status).to.equal(200);
+        chai.expect(response.config.method).to.equal("GET");
+    });
+
+    it("should make request without a HTTP alias", async () => {
+        const response = await client.send({
+            method: "POST",
+            url: `${SERVER_URL}/200`
+        });
+
+        chai.expect(response.status).to.equal(200);
+        chai.expect(response.config.method).to.equal("POST");
     });
 
     describe("internal cache", () => {
@@ -174,69 +184,13 @@ describe("UrbexClient", () => {
         });
     });
 
-    describe("isolated clients", () => {
-        it("should create a new instance and accept a configuration object", () => {
-            const client = new urbex.Client({
-                method: "POST",
-                data: "Hello, world!"
-            });
-
-            chai.expect(client).to.be.an.instanceOf(urbex.Client);
-            chai.expect(client.config.method).to.equal("POST");
-            chai.expect(client.config.data).to.equal("Hello, world!");
-            chai.expect(client.config.pipelines.request).to.have.lengthOf(1);
-
-            if (environment.isNode) {
-                chai.expect(client.config.pipelines.response).to.have.lengthOf(2);
-            } else {
-                chai.expect(client.config.pipelines.response).to.have.lengthOf(1);
-            }
-
-            const client2 = urbex.isolateClient({
-                method: "PATCH",
-                data: "username=foo&password=bar"
-            });
-
-            chai.expect(client2).to.be.an.instanceOf(urbex.Client);
-            chai.expect(client2.config.method).to.equal("PATCH");
-            chai.expect(client2.config.data).to.equal("username=foo&password=bar");
-        });
-
-        it("should throw an error if endpoints are passed into the configuration", () => {
-            chai.expect(() => {
-                new urbex.Client({
-                    url: "/api"
-                });
-            }).to.throw();
-
-            chai.expect(() => {
-                urbex.isolateClient({
-                    url: "/api"
-                });
-            }).to.throw();
-        });
-
-        it("should start the internal cache clock", () => {
-            const client = new urbex.Client({
-                cache: {
-                    enabled: true,
-                    ttl: 5000
-                }
-            });
-
-            chai.expect(client.cache.isRunning).to.be.true;
-
-            client.cache.stop();
-        });
-    });
-
-    describe(".configure()", () => {
+    describe("configure()", () => {
         it("should configure the UrbexClient", () => {
             urbex.configure({
                 url: "https://example.com"
             });
 
-            chai.expect(urbex.config.url.href).to.equal("https://example.com/");
+            chai.expect(urbex.config.url.href).to.equal("https://example.com");
         });
 
         it("should merge configurations together", () => {
@@ -252,43 +206,9 @@ describe("UrbexClient", () => {
                 timeout: 1000
             });
 
-            chai.expect(urbex.config.url.href).to.equal("https://example.org/");
+            chai.expect(urbex.config.url.href).to.equal("https://example.org");
             chai.expect(urbex.config.resolveStatus).to.be.a("function");
             chai.expect(urbex.config.timeout).to.equal(1000);
-        });
-    });
-});
-
-describe("ExtendedUrbexClient", () => {
-    describe(".isolateClient()", () => {
-        it("should create a new instance of UrbexClient", () => {
-            const client = urbex.isolateClient({});
-
-            client.configure({
-                headers: {
-                    "isolate-client": "true"
-                }
-            });
-
-            chai.expect(client).to.be.an.instanceOf(urbex.Client);
-            chai.expect(urbex.config.headers).to.not.have.property("isolate-client");
-        });
-    });
-
-    describe(".isUrbexClient()", () => {
-        it("should return true if the object is an instance of UrbexClient", () => {
-            const client = urbex.isolateClient();
-            chai.expect(urbex.isUrbexClient(client)).to.equal(true);
-        });
-
-        it("should return false if the object is not an instance of UrbexClient", () => {
-            chai.expect(urbex.isUrbexClient({})).to.equal(false);
-        });
-    });
-
-    describe(".environment", () => {
-        it("should return the current environment", () => {
-            chai.expect(urbex.environment).to.equal(environment);
         });
     });
 });
