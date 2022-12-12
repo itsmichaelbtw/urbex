@@ -1,29 +1,25 @@
-import type { InternalConfiguration, URIComponent, UrbexResponse } from "../exportable-types";
-import type { PipelineExecutorsManager } from "../types";
+import type { InternalConfiguration, URLComponent, UrbexResponse } from "../exportable-types";
+import type { ParsedURLComponent, PipelineExecutorsManager } from "../types";
 
-import { environment } from "../environment";
-import { merge, createEmptyScheme } from "../utils";
-
-export const DEFAULT_BROWSER_HEADERS = {
-    "Content-Type": "application/json"
-};
-
-export const DEFAULT_NODE_HEADERS = merge(DEFAULT_BROWSER_HEADERS, {
-    "User-Agent": `UrbexClient (Node.js ${environment.process.version}; ${environment.process.platform})`
-});
+import { createEmptyScheme } from "../utils";
 
 export const REQUEST_BODY_METHODS = ["POST", "PUT", "PATCH"];
 
-export const DEFAULT_URI_COMPONENT = createEmptyScheme<URIComponent>([
-    "endpoint",
-    "hostname",
+export const URL_COMPONENT_KEYS: (keyof URLComponent)[] = [
     "href",
     "origin",
-    "params",
-    "port",
     "protocol",
-    "urlMount"
-]);
+    "username",
+    "password",
+    "hostname",
+    "port",
+    "pathname",
+    "search",
+    "searchParams",
+    "hash"
+];
+
+export const DEFAULT_URL_COMPONENT = createEmptyScheme<ParsedURLComponent>(URL_COMPONENT_KEYS, "");
 
 export const DEFAULT_PIPELINE_EXECUTORS: PipelineExecutorsManager = {
     request: [],
@@ -31,10 +27,7 @@ export const DEFAULT_PIPELINE_EXECUTORS: PipelineExecutorsManager = {
 };
 
 export const DEFAULT_CLIENT_OPTIONS: InternalConfiguration = {
-    url: merge(DEFAULT_URI_COMPONENT, {
-        protocol: "http",
-        urlMount: "/api"
-    }),
+    url: null,
     timeout: 0,
     method: "GET",
     headers: null,
@@ -64,3 +57,5 @@ export const DEFAULT_URBEX_RESPONSE = createEmptyScheme<UrbexResponse>([
     "cache.pulled",
     "cache.stored"
 ]);
+
+export const METHODS = ["PUT", "POST", "PATCH", "OPTIONS", "HEAD", "GET", "DELETE"];
