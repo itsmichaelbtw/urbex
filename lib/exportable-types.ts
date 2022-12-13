@@ -126,6 +126,8 @@ export interface URLComponent<SearchType = CustomSearchParams, PortType = Port> 
      *
      * This value takes **precedence** over all other values when
      * deserializing a component.
+     *
+     * When serializing a component, this value is ignored.
      */
     href: string;
     /**
