@@ -9,8 +9,7 @@ import { BrowserRequest } from "./xhr";
 import { startRequest } from "./conclude";
 import { environment } from "../../environment";
 import { UrbexError } from "../error";
-import { UrbexHeaders } from "../headers";
-import { clone, deepClone, isUndefined } from "../../utils";
+import { deepClone, isUndefined } from "../../utils";
 
 export class RequestApi {
     /**
