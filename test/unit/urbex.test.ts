@@ -93,25 +93,6 @@ describe("urbex", () => {
         chai.expect(client.config.url.port).to.equal(3000);
     });
 
-    it("should default to 'GET' requests", async () => {
-        const response = await client.send({
-            url: `${SERVER_URL}/200`
-        });
-
-        chai.expect(response.status).to.equal(200);
-        chai.expect(response.config.method).to.equal("GET");
-    });
-
-    it("should make request without a HTTP alias", async () => {
-        const response = await client.send({
-            method: "POST",
-            url: `${SERVER_URL}/200`
-        });
-
-        chai.expect(response.status).to.equal(200);
-        chai.expect(response.config.method).to.equal("POST");
-    });
-
     describe("internal cache", () => {
         it("should return the current cache module", () => {
             client.configure({
