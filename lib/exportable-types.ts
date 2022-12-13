@@ -189,6 +189,10 @@ export interface URLComponent<SearchType = CustomSearchParams, PortType = Port> 
  */
 export interface UrbexErrorType {
     /**
+     * The name of the error.
+     */
+    name: string;
+    /**
      * The status of the error.
      */
     status: number;
