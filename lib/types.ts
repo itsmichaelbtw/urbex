@@ -209,3 +209,12 @@ export interface BaseConfiguration<D = any> {
 export interface UrbexRequestApi {
     send(config: InternalConfiguration): DispatchedAPIRequest;
 }
+
+/**
+ * The entity that is resolved before concluding the request.
+ */
+export interface ResolvableEntity {
+    data: any;
+    request: any;
+    response: any;
+}

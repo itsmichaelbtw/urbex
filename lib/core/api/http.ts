@@ -5,10 +5,13 @@ import zlib from "zlib";
 import util from "util";
 import stream from "stream";
 
-import type { Socket } from "net";
-
 import type { InternalConfiguration } from "../../exportable-types";
-import type { DispatchedResponse, UrbexRequestApi, DispatchedAPIRequest } from "../../types";
+import type {
+    DispatchedResponse,
+    UrbexRequestApi,
+    DispatchedAPIRequest,
+    ResolvableEntity
+} from "../../types";
 
 import { resolveRequest } from "./resolve-request";
 import { UrbexError, TimeoutError, NetworkError } from "../error";
@@ -60,7 +63,7 @@ export class NodeRequest implements UrbexRequestApi {
 
             const request = agent.request(options);
 
-            function resolve(response: any): void {
+            function resolve(response: ResolvableEntity): void {
                 return resolveRequest.call({ config, request }, _resolve, _reject, response);
             }
 

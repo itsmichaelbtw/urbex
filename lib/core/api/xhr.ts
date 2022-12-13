@@ -3,7 +3,8 @@ import type {
     DispatchedResponse,
     UrbexRequestApi,
     DispatchedAPIRequest,
-    ResponseTypes
+    ResponseTypes,
+    ResolvableEntity
 } from "../../types";
 
 import { resolveRequest } from "./resolve-request";
@@ -56,7 +57,7 @@ export class BrowserRequest implements UrbexRequestApi {
                 request.timeout = config.timeout;
             }
 
-            function resolve(response: any): void {
+            function resolve(response: ResolvableEntity): void {
                 return resolveRequest.call({ config, request }, _resolve, _reject, response);
             }
 
