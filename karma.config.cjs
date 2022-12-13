@@ -28,7 +28,11 @@ module.exports = (config) => {
             [testGlob]: ["karma-typescript"],
             "test/constants.ts": ["karma-typescript"]
         },
-        reporters: ["progress", "karma-typescript"],
+        exclude: [
+            "test/unit/isolation.test.ts",
+            "test/unit/url-parser.test.ts",
+            "test/unit/utils.test.ts"
+        ],
         browsers: ["ChromeHeadless" /*"FirefoxHeadless"*/],
         port: 9876,
         captureTimeout: 4 * 60 * 1000,
