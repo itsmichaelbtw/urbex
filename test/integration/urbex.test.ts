@@ -117,39 +117,161 @@ describe("client", () => {
         chai.expect(optionsResponse.status).to.equal(200);
     });
 
-    it("should treat endpoints as a url", async () => {
+    it("should perform OPTIONS and HEAD requests", async () => {
+        const url = `${SERVER_URL}/200`;
+
+        const [header, options, headSend, optionsSend] = await Promise.all([
+            client.head(url),
+            client.options(url),
+            client.send({
+                method: "HEAD",
+                url: url
+            }),
+            client.send({
+                method: "OPTIONS",
+                url: url
+            })
+        ]);
+
+        chai.expect(header.status).to.equal(200);
+        chai.expect(options.status).to.equal(200);
+        chai.expect(headSend.status).to.equal(200);
+        chai.expect(optionsSend.status).to.equal(200);
+    });
+
+    it("the configuration should be attached to the response", async () => {
+        const url = `${SERVER_URL}/200`;
+
+        client.configure({
+            url: url,
+            method: "post",
+            headers: {
+                "X-Test": "test",
+                foo: "bar",
+                bar: "foo"
+            },
+            resolveStatus: (config, status) => status === 200
+        });
+
+        const response = await client.send();
+
+        chai.expect(response.config).to.deep.equal(client.config);
+    });
+
+    it("should treat pathnames as a url", async () => {
         client.configure({ url: SERVER_URL });
         const response = await client.get("/200");
 
         chai.expect(response.status).to.equal(200);
+        chai.expect(response.config.url.href).to.equal(`${SERVER_URL}/200`);
+        chai.expect(response.config.url.pathname).to.equal("/200");
     });
 
-    describe("headers", () => {});
+    it("should allow full urls when using alias", async () => {
+        const response = await client.get(`${SERVER_URL}/200`);
 
-    describe("timeout", () => {
-        it("should not timeout when a value is not provided", async () => {
-            const response = await client.get(`${SERVER_URL}/delay/500`);
+        chai.expect(response.status).to.equal(200);
+        chai.expect(response.config.url.href).to.equal(`${SERVER_URL}/200`);
+        chai.expect(response.config.url.pathname).to.equal("/200");
 
-            chai.expect(response.status).to.equal(200);
+        const response2 = await client.get({
+            href: `${SERVER_URL}/200`
         });
 
-        it("should timeout when a value is provided", async () => {
-            try {
-                await client.get(`${SERVER_URL}/delay/500`, {
-                    timeout: 100
-                });
-            } catch (error) {
-                chai.expect(error).to.be.an.instanceOf(Error);
-                chai.expect(error).to.have.property("message");
-                chai.expect(error.name).to.equal("TimeoutError");
-                chai.expect(error.message).to.equal("Timeout of 100ms exceeded");
+        chai.expect(response2.status).to.equal(200);
+        chai.expect(response2.config.url.href).to.equal(`${SERVER_URL}/200`);
+        chai.expect(response2.config.url.pathname).to.equal("/200");
+    });
+
+    it("should fall back on default configuration if no config is passed", async () => {
+        client.configure({
+            url: {
+                origin: SERVER_URL,
+                pathname: "/200"
+            },
+            headers: {
+                "X-Test": "test"
             }
         });
+
+        const response = await client.send();
+
+        chai.expect(response.status).to.equal(200);
+        chai.expect(response.config.url.href).to.equal(`${SERVER_URL}/200`);
+        chai.expect(response.config.url.pathname).to.equal("/200");
+        chai.expect(response.config.headers.get()).to.have.property("X-Test");
     });
 
-    describe("maxContentLength", () => {});
+    it("should preserve existing headers when null or undefined is passed", async () => {
+        client.configure({
+            url: {
+                origin: SERVER_URL,
+                pathname: "/200"
+            },
+            headers: {
+                "X-Test": "test"
+            }
+        });
 
-    describe("responseType", () => {});
+        const response = await client.send({
+            headers: {
+                "X-Test2": null,
+                "X-Test3": undefined
+            }
+        });
 
-    describe("responseEncoding", () => {});
+        chai.expect(response.status).to.equal(200);
+        chai.expect(response.config.url.href).to.equal(`${SERVER_URL}/200`);
+        chai.expect(response.config.url.pathname).to.equal("/200");
+        chai.expect(response.config.headers.get()).to.have.property("X-Test");
+        chai.expect(response.config.headers.get()).to.not.have.property("X-Test2");
+        chai.expect(response.config.headers.get()).to.not.have.property("X-Test3");
+    });
+
+    it("should allow lowercase and uppercase methods", async () => {
+        const url = `${SERVER_URL}/200`;
+
+        const [lowercase, uppercase, funnycase] = await Promise.all([
+            client.send({
+                method: "get",
+                url: url
+            }),
+            client.send({
+                method: "GET",
+                url: url
+            }),
+            client.send({
+                // @ts-expect-error
+                method: "GeT",
+                url: url
+            })
+        ]);
+
+        chai.expect(lowercase.status).to.equal(200);
+        chai.expect(uppercase.status).to.equal(200);
+        chai.expect(funnycase.status).to.equal(200);
+
+        chai.expect(lowercase.config.method).to.equal("GET");
+        chai.expect(uppercase.config.method).to.equal("GET");
+        chai.expect(funnycase.config.method).to.equal("GET");
+    });
+
+    it("should default to 'GET' requests", async () => {
+        const response = await client.send({
+            url: `${SERVER_URL}/200`
+        });
+
+        chai.expect(response.status).to.equal(200);
+        chai.expect(response.config.method).to.equal("GET");
+    });
+
+    it("should make request without a HTTP alias", async () => {
+        const response = await client.send({
+            method: "POST",
+            url: `${SERVER_URL}/200`
+        });
+
+        chai.expect(response.status).to.equal(200);
+        chai.expect(response.config.method).to.equal("POST");
+    });
 });
