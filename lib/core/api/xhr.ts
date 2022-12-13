@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 import type { InternalConfiguration } from "../../exportable-types";
 import type {
     DispatchedResponse,

@@ -74,6 +74,7 @@ export class RequestConfig {
     constructor(config?: UrbexConfig) {
         this.setup();
 
+        /* istanbul ignore if */
         if (isObject(config) && !isEmpty(config)) {
             this.set(this.createConfigurationObject(config, true));
         }
@@ -100,9 +101,10 @@ export class RequestConfig {
         this.set(configuration);
     }
 
+    /* istanbul ignore next */
     public defaultConfig(): InternalConfiguration {
         return merge(DEFAULT_CLIENT_OPTIONS, {
-            url: {},
+            url: environment.getEnvironmentComponent(),
             headers: new UrbexHeaders()
         });
     }

@@ -35,6 +35,7 @@ function parseHeaderKey(key: string): string {
         return removeNewLines(format);
     }
 
+    /* istanbul ignore next */
     return undefined;
 }
 
@@ -43,10 +44,12 @@ function parseHeaderValue(value: HeaderValues): string {
         return undefined;
     }
 
+    /* istanbul ignore next */
     if (isArray(value)) {
         return value.join(", ");
     }
 
+    /* istanbul ignore next */
     if (isObject(value)) {
         return JSON.stringify(value);
     }

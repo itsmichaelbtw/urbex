@@ -210,6 +210,7 @@ forEach(["post", "put", "patch"], (_, value: MethodsLower) => {
                 return data;
             }
 
+            /* istanbul ignore next */
             if (isObject(config)) {
                 return merge(config, { data: data });
             } else {
