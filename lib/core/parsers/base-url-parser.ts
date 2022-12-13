@@ -30,7 +30,7 @@ interface ParamsConversionOutput {
 const DEFAULT_PROTOCOL = "http";
 
 const PARSE_URL =
-    /^(?:([^:\/?#]+):)?(?:\/\/((?:([^@\/\n]+)@)?((?:[0-9]{1,3}\.){3}[0-9]{1,3}|\[[0-9a-f:]+\]|[^#:\/?\n]+)(?::(\d*))?))?(?:[\/]*([^?#]*))(?:[\?]*([^#]*))?(?:[\#]*(.*))?/i;
+    /^(?:([^:\/?#]+):)?(?:[\/\/]+((?:([^@\/\n]+)@)?((?:[0-9]{1,3}\.){3}[0-9]{1,3}|\[[0-9a-f:]+\]|[^#:\/?\n]+)(?::(\d*))?))?(?:[\/]*([^?#]*))(?:[\?]*([^#]*))?(?:[\#]*(.*))?/i;
 
 const IPV4_REGEX = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
 const IPV6_REGEX = /^(\[[0-9a-f:]+\])$/i;
@@ -144,6 +144,10 @@ export class BaseURLParser {
     protected $component: EnforceComponent;
 
     constructor(input: string | SerializeComponent) {
+        if (input && !isString(input) && !isObject(input)) {
+            throw new TypeError("Invalid input. Must be a string or an object.");
+        }
+
         this.$component = createEmptyScheme<EnforceComponent>(URL_COMPONENT_KEYS, "");
 
         if (isString(input) && input) {
@@ -151,7 +155,7 @@ export class BaseURLParser {
             return;
         }
 
-        if (isObject(input)) {
+        if (isObject(input) && !isEmpty(input)) {
             if (input.href) {
                 this.$component = this.parse(input.href);
             } else {
@@ -291,7 +295,11 @@ export class BaseURLParser {
             return;
         }
 
-        this.$component.pathname = ensureLeadingToken("/", pathname);
+        if (this.$component.hostname) {
+            this.$component.pathname = ensureLeadingToken("/", pathname);
+        } else {
+            this.$component.pathname = pathname;
+        }
     }
 
     protected parseParams(params: CustomSearchParams): void {
