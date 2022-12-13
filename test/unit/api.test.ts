@@ -1,12 +1,26 @@
 import chai from "chai";
 
 import urbex, { URLParser, PipelineExecutor } from "../../lib/urbex";
+import { RequestApi } from "../../lib/core/api/request-api";
+import { NodeRequest } from "../../lib/core/api/http";
+import { BrowserRequest } from "../../lib/core/api/xhr";
+import { environment } from "../../lib/environment";
 
 const client = new urbex.Client();
 
 describe("api", () => {
     beforeEach(() => {
         client.reset();
+    });
+
+    it("should have configure method", () => {
+        chai.expect(client).to.have.property("configure");
+        chai.expect(client.configure).to.be.a("function");
+    });
+
+    it("should have reset method", () => {
+        chai.expect(client).to.have.property("reset");
+        chai.expect(client.reset).to.be.a("function");
     });
 
     it("should have http method alias", () => {
@@ -63,5 +77,36 @@ describe("api", () => {
     it("should expose the URLParser class (named)", () => {
         chai.expect(URLParser).to.not.be.undefined;
         chai.expect(URLParser).to.be.a("function");
+    });
+
+    it("should return a promise when invoking a request", () => {
+        const request = client.get("https://example.com");
+
+        chai.expect(request).to.be.an.instanceOf(Promise);
+        chai.expect(request).to.have.property("then");
+        chai.expect(request).to.have.property("catch");
+        chai.expect(request).to.have.property("finally");
+    });
+
+    it("the request api should be an instance of NodeRequest when running in node", function () {
+        if (environment.isBrowser) {
+            this.skip();
+        }
+
+        const request = new RequestApi();
+
+        // @ts-expect-error
+        chai.expect(request.$api).to.be.an.instanceOf(NodeRequest);
+    });
+
+    it("the request api should be an instance of BrowserRequest when running in the browser", function () {
+        if (!environment.isBrowser) {
+            this.skip();
+        }
+
+        const request = new RequestApi();
+
+        // @ts-expect-error
+        chai.expect(request.$api).to.be.an.instanceOf(BrowserRequest);
     });
 });
