@@ -1,4 +1,5 @@
 import type { InternalConfiguration } from "../../exportable-types";
+import type { ResolvableEntity } from "../../types";
 
 import { environment } from "../../environment";
 import { UrbexError } from "../error";
@@ -15,24 +16,35 @@ export function resolveRequest(
     this: ResolvableBindings,
     resolve: Resolve,
     reject: Reject,
-    entity: any
+    entity: ResolvableEntity
 ): void {
     const status = environment.isNode ? entity.response.statusCode : entity.response.status;
-    const canResolve = this.config.resolveStatus(this.config, status);
+    const errorInstance: UrbexError = UrbexError.createErrorInstance.call(this, UrbexError);
 
-    if (canResolve) {
-        return resolve(entity);
+    errorInstance.status = status;
+    errorInstance.response = entity.response;
+    errorInstance.request = this.request;
+
+    try {
+        const canResolve = this.config.resolveStatus(this.config, status);
+
+        if (canResolve) {
+            return resolve(entity);
+        }
+
+        if (environment.isNode) {
+            errorInstance.message = entity.response.statusMessage;
+        } else {
+            errorInstance.message = entity.response.statusText;
+        }
+
+        if (!errorInstance.message) {
+            errorInstance.message = `Request failed with status code ${status}`;
+        }
+
+        return reject(errorInstance);
+    } catch (error) {
+        errorInstance.message = error.message;
+        return reject(errorInstance);
     }
-
-    const error: UrbexError = UrbexError.createErrorInstance.call(this, UrbexError);
-    const errorMessage = `Request failed with status code ${status}`;
-
-    error.message = environment.isNode
-        ? entity.response.statusMessage
-        : entity.response.statusText ?? errorMessage;
-    error.request = this.request;
-    error.status = status;
-    error.response = entity.response;
-
-    return reject(error);
 }
