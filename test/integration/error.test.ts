@@ -61,6 +61,20 @@ describe("errors", () => {
         }
     });
 
+    it("should catch errors from `resolveStatus` option", async () => {
+        try {
+            await client.get("/404", {
+                resolveStatus: () => {
+                    throw new Error("This is a test error");
+                }
+            });
+        } catch (error) {
+            chai.expect(error).to.be.an.instanceOf(Error);
+            chai.expect(error.name).to.equal("Error");
+            chai.expect(error.message).to.equal("This is a test error");
+        }
+    });
+
     it("should throw a TimeoutError", async () => {
         try {
             await client.get("/delay/250", {
@@ -73,13 +87,17 @@ describe("errors", () => {
         }
     });
 
-    it("should throw a NetworkError", async () => {
+    it("should throw a NetworkError", async function () {
+        this.timeout(3000);
+
         try {
             await client.get("http://localhost:9999");
         } catch (error) {
             chai.expect(error).to.be.an.instanceOf(Error);
             chai.expect(error.name).to.equal("NetworkError");
-            chai.expect(error.message).to.include("connect ECONNREFUSED");
+            chai.expect(error).to.have.property("message");
+            chai.expect(error).to.have.property("config");
+            chai.expect(error).to.have.property("request");
         }
     });
 });
