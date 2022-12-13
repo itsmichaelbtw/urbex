@@ -24,9 +24,9 @@ describe("environment", () => {
             this.skip();
         }
 
-        chai.assert.strictEqual(environment.context, "browser");
-        chai.assert.strictEqual(environment.isBrowser, true);
-        chai.assert.strictEqual(environment.isNode, false);
+        chai.expect(environment.context).to.equal("browser");
+        chai.expect(environment.isBrowser).to.equal(true);
+        chai.expect(environment.isNode).to.equal(false);
     });
 
     it("should detect the environment context (node)", function () {
@@ -34,9 +34,17 @@ describe("environment", () => {
             this.skip();
         }
 
-        chai.assert.strictEqual(environment.context, "node");
-        chai.assert.strictEqual(environment.isNode, true);
-        chai.assert.strictEqual(environment.isBrowser, false);
+        chai.expect(environment.context).to.equal("node");
+        chai.expect(environment.isNode).to.equal(true);
+        chai.expect(environment.isBrowser).to.equal(false);
+    });
+
+    it("should return the Node process", function () {
+        if (environment.isBrowser) {
+            chai.expect(environment.process).to.deep.equal({});
+        } else {
+            chai.expect(environment.process).to.equal(process);
+        }
     });
 
     it("current environment should be development", function () {
@@ -44,8 +52,8 @@ describe("environment", () => {
             this.skip();
         }
 
-        chai.assert.isTrue(environment.isDevelopment);
-        chai.assert.isFalse(environment.isProduction);
+        chai.expect(environment.isDevelopment).to.equal(true);
+        chai.expect(environment.isProduction).to.equal(false);
     });
 
     it("current environment should be production", function () {
@@ -55,14 +63,22 @@ describe("environment", () => {
 
         envAgent.set("NODE_ENV", "production");
 
-        chai.assert.isTrue(environment.isProduction);
-        chai.assert.isFalse(environment.isDevelopment);
+        chai.expect(environment.isProduction).to.equal(true);
+        chai.expect(environment.isDevelopment).to.equal(false);
     });
 
     it("should create the correct environment component (browser)", function () {
         if (environment.isNode) {
             this.skip();
         }
+
+        const parser = environment.getEnvironmentComponent();
+
+        chai.expect(parser).to.be.instanceOf(URLParser);
+
+        const envComponent = parser.toJSON();
+
+        chai.expect(envComponent.href).to.equal(window.location.href);
     });
 
     it("should create the correct environment component (node)", function () {
@@ -82,5 +98,14 @@ describe("environment", () => {
         chai.expect(envComponent.protocol).to.equal("http");
         chai.expect(envComponent.hostname).to.equal("localhost");
         chai.expect(envComponent.port).to.equal(3000);
+    });
+
+    it("should throw an error when attempting to use Node only operations (browser)", function () {
+        if (environment.isNode) {
+            this.skip();
+        }
+
+        chai.expect(() => environment.isDevelopment).to.throw();
+        chai.expect(() => environment.isProduction).to.throw();
     });
 });

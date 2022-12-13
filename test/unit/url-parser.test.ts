@@ -9,6 +9,28 @@ type PartialComponent = Partial<URLComponent>;
 const parser = new URLParser(SERVER_URL);
 
 describe("url-parser", () => {
+    it("should parse a component (static)", () => {
+        const component = URLParser.parse("https://example.com");
+
+        chai.expect(component).to.be.an("object");
+        chai.expect(component.href).to.equal("https://example.com");
+        chai.expect(component.origin).to.equal("https://example.com");
+        chai.expect(component.protocol).to.equal("https");
+        chai.expect(component.username).to.equal("");
+        chai.expect(component.password).to.equal("");
+        chai.expect(component.hostname).to.equal("example.com");
+        chai.expect(component.port).to.equal("");
+        chai.expect(component.pathname).to.equal("");
+        chai.expect(component.search).to.equal("");
+        chai.expect(component.hash).to.equal("");
+    });
+
+    it("should serialize a component (serialize)", () => {
+        const component = URLParser.parse("https://example.com");
+
+        chai.expect(URLParser.serialize(component.toJSON())).to.equal("https://example.com");
+    });
+
     it("should have public methods and properties", () => {
         chai.expect(URLParser).to.be.a("function");
         chai.expect(URLParser).to.have.property("parse");
@@ -60,6 +82,30 @@ describe("url-parser", () => {
 
         chai.expect(output).to.be.a("string");
         chai.expect(output).to.equal("https://example.com/?search#hash");
+    });
+
+    it("using `set()` should set the component", () => {
+        const component: PartialComponent = {
+            href: "https://example.com:8080/pathname?foo=bar",
+            origin: "https://example.com:8080",
+            protocol: "https",
+            hostname: "example.com",
+            port: "8080",
+            pathname: "/pathname",
+            searchParams: new URLSearchParams("foo=bar")
+        };
+
+        const url = new URLParser();
+
+        url.set(component);
+
+        chai.expect(url.href).to.equal("https://example.com:8080/pathname?foo=bar");
+        chai.expect(url.origin).to.equal("https://example.com:8080");
+        chai.expect(url.protocol).to.equal("https");
+        chai.expect(url.hostname).to.equal("example.com");
+        chai.expect(url.port).to.equal("8080");
+        chai.expect(url.pathname).to.equal("/pathname");
+        chai.expect(url.search).to.equal("?foo=bar");
     });
 
     describe("when parsing", () => {

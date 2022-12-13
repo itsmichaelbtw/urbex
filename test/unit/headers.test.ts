@@ -78,6 +78,13 @@ describe("headers", () => {
                 "X-Baz": "BAR"
             });
         });
+
+        it("should return an empty object if no headers are passed", () => {
+            // @ts-expect-error
+            const result = UrbexHeaders.parse();
+
+            chai.expect(result).to.deep.equal({});
+        });
     });
 
     describe("defaults", () => {
@@ -170,6 +177,13 @@ describe("headers", () => {
             });
 
             chai.expect(Object.keys(result)).to.have.lengthOf(1);
+        });
+
+        it("should return the original input if headers are not a valid object", () => {
+            // @ts-expect-error
+            const result = headers.set(123);
+
+            chai.expect(result).to.equal(123);
         });
     });
 
@@ -275,6 +289,13 @@ describe("headers", () => {
                 "X-Bar": "foo",
                 "X-Baz": "FOO"
             });
+        });
+
+        it("should return an empty object", () => {
+            // @ts-expect-error
+            const result = headers.normalize(123);
+
+            chai.expect(result).to.deep.equal({});
         });
     });
 });

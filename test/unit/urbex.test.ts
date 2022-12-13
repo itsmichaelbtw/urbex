@@ -93,6 +93,35 @@ describe("urbex", () => {
         chai.expect(client.config.url.port).to.equal(3000);
     });
 
+    it("attempting to set an invalid configuration should throw an error", () => {
+        chai.expect(() => {
+            client.configure("an invalid configuration" as any);
+        }).to.throw();
+    });
+
+    it("attempting to set an invalid url should throw an error", () => {
+        chai.expect(() => {
+            client.configure({
+                url: [] as any
+            });
+        }).to.throw();
+    });
+
+    it("should throw an error when an invalid method is used", () => {
+        chai.expect(() => {
+            client.configure({
+                method: "INVALID_METHOD" as any
+            });
+        }).to.throw();
+    });
+
+    it("should throw an error when making a request with no url passed (alias)", async () => {
+        chai.expect(() => {
+            // @ts-expect-error
+            client.get();
+        }).to.throw();
+    });
+
     describe("internal cache", () => {
         it("should return the current cache module", () => {
             client.configure({
