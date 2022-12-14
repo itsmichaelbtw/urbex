@@ -158,7 +158,7 @@ The API is designed to be as simple as possible. The goal is to provide a simple
 
 Is the base method that all other methods are built on top of. This method accepts a configuration object that is used to make the request. The configuration object is then passed through a pipeline of transformers that are used to transform the request, make the request, and transform the response. By default, if no configuration is passed, the global configuration is used. Likewise, if a configuration is passed, it is merged with the global configuration.
 
-**Note**: On each request, the global configuration is cloned and merged with the request configuration. This ensures that the global configuration is not mutated.
+Note: On each request, the global configuration is cloned and merged with the request configuration. This ensures that the global configuration is not mutated.
 
 ### Verb Aliases
 
@@ -176,23 +176,23 @@ It is recommended if you find yourself only requesting data from the same URL wi
 
 The client can be configured globally or on a per-request basis. The global configuration is the default configuration that is used for all requests. The per-request configuration is used to override the global configuration for a specific request. You are freely able to use both the global and per-request configuration at the same time, along with calling `.configure()` multiple times. All configurations are merged together in the order they are called.
 
-The core detects what environment it is running in and will automatically set the default configuration for that environment.
+The **core** detects what environment it is running in and will automatically set the default configuration for that environment.
 
-| Property         | Type                     | Default              | Environment | Description                                                                            |
-|------------------|--------------------------|----------------------|:-----------:|----------------------------------------------------------------------------------------|
-| url              | UrbexURL                 | Based on environment | *           | The url to use for the request. Can be either a string or an object.                   |
-| headers          | Object                   | Based on environment | *           | Custom headers to be sent with the request.                                            |
-| method           | Methods                  | "GET"                | *           | The method of the request.                                                             |
-| data             | any                      | null                 | *           | Data to use when a request accepts a request body.                                     |
-| timeout          | number                   | 0                    | *           | Set the default timeout to use for all requests.                                       |
-| cache            | ClockOptions             | {}                   | *           | Control the internal ttl cache module.                                                 |
-| pipelines        | PipelineExecutorsManager | Based on environment | *           | Custom pipeline transformers to use when making requests.                              |
-| maxContentLength | number                   | Infinity             | NodeJS      | The max content length of a response.                                                  |
-| responseType     | ResponseTypes            | "JSON"               | *           | The response type of the request.                                                      |
-| responseEncoding | BufferEncoding           | "utf8"               | NodeJS      | The encoding to use when converting from a buffer to a string.                         |
-| resolveStatus    | ResolveStatus            | >= 200 and < 300     | *           | A function that determines whether the request should be considered successful or not. |
+| Property             | Default              | Description                                                                            |
+|----------------------|----------------------|----------------------------------------------------------------------------------------|
+| **url**              | Based on environment | The url to use for the request. Can be either a string or an object.                   |
+| **headers**          | Based on environment | Custom headers to be sent with the request.                                            |
+| **method**           | `GET`                | The method of the request.                                                             |
+| **data**             | `null`               | Data to use when a request accepts a request body.                                     |
+| **timeout**          | `0`                  | Set the default timeout to use for all requests.                                       |
+| **cache**            | `{}`                 | Control the internal ttl cache module.                                                 |
+| **pipelines**        | Based on environment | Custom pipeline transformers to use when making requests.                              |
+| **maxContentLength** | `Infinity`           | The max content length of a response.                                                  |
+| **responseType**     | `JSON`               | The response type of the request.                                                      |
+| **responseEncoding** | `utf8`               | The encoding to use when converting from a buffer to a string.                         |
+| **resolveStatus**    | >= 200 && < 300      | A function that determines whether the request should be considered successful or not. |
 
-For clarification on `Type`, check out the [TypeScript Definitions](#typescript).
+For clarification on the properties, check out the [TypeScript Definitions](#typescript).
 
 ### Environment Defaults
 
@@ -206,11 +206,13 @@ Defaults are applied to the request configuration depending on what environment 
     href: window.location.href,
     origin: window.location.origin,
     protocol: window.location.protocol,
+    username: "",
+    password: "",
     hostname: window.location.hostname,
-    urlMount: "/api",
-    endpoint: "",
     port: window.location.port,
-    params: ""
+    pathname: window.location.pathname,
+    search: window.location.search,
+    hash: window.location.hash,
   },
   headers: {
     "Content-Type": "application/json"
@@ -227,14 +229,16 @@ Defaults are applied to the request configuration depending on what environment 
 ```typescript
 {
   url: {
-    href: "http://localhost:3000/api",
+    href: "http://localhost:3000",
     origin: "http://localhost:3000",
     protocol: "http",
+    username: "",
+    password: "",
     hostname: "localhost",
-    urlMount: "/api",
-    endpoint: "",
     port: 3000,
-    params: ""
+    pathname: "",
+    search: "",
+    hash: ""
   },
   headers: {
     "Content-Type": "application/json",
@@ -278,7 +282,7 @@ You are still given full functionality of the client and all vital methods are a
 
 If you wish to still use these methods, they are accessible through the `urbex` object.
 
-**Note**: For every isolated client that is instantiated, a new instance of the `CacheClock` class is created. This is to ensure that each client has its own internal cache. If you enable the cache, remember to stop/disable the clock when you are done with the client.
+Note: For every isolated client that is instantiated, a new instance of the `CacheClock` class is created. This is to ensure that each client has its own internal cache. If you enable the cache, remember to stop/disable the clock when you are done with the client.
 
 ## Pipeline Transformers
 
@@ -296,11 +300,15 @@ import urbex, { PipelineExecutor, RequestExecutor, ResponseExecutor } from "urbe
 const requestPipeline = new PipelineExecutor<RequestExecutor>((config) => {
   // Do something with the request configuration
   return Promise.resolve(config)
+
+  // return Promise.reject(new Error("Something went wrong in the request pipeline"))
 })
 
 const responsePipeline = new PipelineExecutor<ResponseExecutor>((config) => {
   // Do something with the response configuration
   return Promise.resolve(config)
+
+  // return Promise.reject(new Error("Something went wrong in the resposne pipeline"))
 })
 
 // both pipelines are executed AFTER the default pipelines
@@ -322,6 +330,18 @@ urbex.get("/users", {
 })
 ```
 
+Pipeline executors can be globally registered, or on a per-request basis. Responses that are pulled from the internal cache module still go through the response pipeline. This is to ensure that the response is transformed correctly. Each `PipelineExecutor` instance only registers one pipeline. If you wish to register multiple pipelines, you must create multiple instances of the `PipelineExecutor` class. There is no limit to the number of pipelines that can be registered.
+
+Whilst a simple integration, this is a powerful feature that allows you to perform any logic/operation before and after a request has been made. 
+
+Examples of pipelines that you can create:
+
+- Automatically log requests
+- Append a token to the request headers
+- Modify the request URL based on a value
+- Edit or set request body data
+- Make a request to a different URL based on a condition
+
 ### Injecting Pipelines
 
 **Coming Soon**
@@ -338,7 +358,7 @@ You can also eject a pipeline from the pipeline chain using `ejectPipeline(pipel
 
 ## Internal Cache Module
 
-All requests, if configured, are cached internally. This is done to reduce the number of requests that are made to the server. The cache is based on the request configuration and the response data. The cache is cleared when the client is stopped. Before a request is made, the cache is checked to see if the request has been made before. If it has, the cached response is returned. If it has not, the request is made and the response is cached. The href of the request is used as the key for the cache.
+All requests, if configured, are cached internally. This is done to reduce the number of requests that are made to the server. The cache is based on the request configuration and the response data. The cache is cleared when the client is stopped. Before a request is made, the cache is checked to see if the request has been made before. If it has, the cached response is returned. If it has not, the request is made and the response is cached. The href of the request is used as the key for the cache. The **raw** result from the server request is cached, not the transformed response.
 
 All pipelines are executed even if the request is cached. You may control this behaviour by using the `cache` option in the request configuration.
 
@@ -391,6 +411,10 @@ Errors are handled automatically by the client. After each request has finished,
  */
 export interface UrbexErrorType {
     /**
+     * The name of the error.
+     */
+    name: string;
+    /**
      * The status of the error.
      */
     status: number;
@@ -413,9 +437,13 @@ export interface UrbexErrorType {
 }
 ```
 
+Additional errors such as `NetworkError`, `TimeoutError` and `PipelineError` are thrown when the request fails depending on the error type. These classes along with the `UrbexError` base class are available as a named export.
+
+See the [Urbex Error](lib/core//error.ts) class for more information.
+
 ### Resolve Status Codes
 
-To control if a request is allowed to resolve, you can use the `resolveStatus` option in the configuration. Both the current configuration and the response status code are passed to the function. The function must return a boolean value. 
+To control if a request is allowed to resolve, you can use the `resolveStatus` option in the configuration. Both the current configuration and the response status code are passed to the function. The function must return a boolean value. Errors are caught automatically if this function were to throw an error.
 
 ```typescript
 urbex.get("https://jsonplaceholder.typicode.com/users", {
@@ -439,11 +467,13 @@ import urbex, { PipelineExecutor } from "urbex";
 
 urbex.configure({
   headers: {
-    "Content-Type": "multipart/form-data" // will get overwritten
+    "Content-Type": "multipart/form-data" // will get overwritten for POST, PUT and PATCH requests
   }
 })
 
-console.log(urbex.config.headers["Content-Type"]); // application/x-www-form-urlencoded
+const response = await urbex.post("https://jsonplaceholder.typicode.com/users");
+
+response.config.headers["Content-Type"] // application/x-www-form-urlencoded
 
 // solution
 
@@ -501,475 +531,7 @@ import {
 } from "urbex";
 ```
 
-#### ExtendedUrbexClient
-
-An extended version of the Urbex client. This is the client that is exported by default. 
-
-<details>
-  <summary>Interface</summary>
-
-  ```typescript
-  export interface ExtendedUrbexClient extends UrbexClient {
-      /**
-       * Create a new isolated instance of the Urbex client
-       *
-       * Any existing configuration will be copied to the new
-       * instance. Furthermore, changes made to the new instance
-       * will not affect the original instance
-       */
-      isolateClient(config?: UrbexConfig): UrbexClient;
-      /**
-       *
-       * TypeScript safe guard to check if an object is an instance of UrbexClient
-       */
-      isUrbexClient(client: unknown): client is UrbexClient;
-      /**
-       * The underlying UrbexClient class which can be used to create new instances
-       *
-       * Recommended to use `isolateClient` instead
-       */
-      Client: typeof UrbexClient;
-      /**
-       * The current environment of the project
-       */
-      environment: Environment;
-  }
-  ```
-</details>
-
-#### InternalConfiguration
-
-The internal configuration object that is used to make requests. This object is passed to the request pipeline and is used to make the request. When you attempt to configure the client, this is the object that is returned after internal parsing and validation.
-
-<details>
-  <summary>Base Configuration</summary>
-
-  ```typescript
-  /**
-   * The base configuration object.
-   */
-  export interface BaseConfiguration<D = any> {
-      /**
-       * Set the default request method to use. This is useful if you find
-       * yourself using the same method for all requests.
-       *
-       * It is recommended when setting this option, to instead use
-       * `urbex.send()`. This will use the method specified in the
-       * request options.
-       *
-       * Defaults to "GET".
-       */
-      method: Methods;
-      /**
-       * Set the default data to use.
-       *
-       * Any additional data passed to the request will not be merged
-       * with the default data.
-       *
-       * Defaults to `null`.
-       */
-      data: D;
-      /**
-       * Set the default timeout to use for all requests.
-       *
-       * Defaults to `0` (no timeout).
-       */
-      timeout: number;
-      /**
-       * Control the internal ttl cache module. Provide a `ttl` value to enable the cache.
-       *
-       * See the [cache-clock](https://github.com/itsmichaelbtw/cache-clock)
-       * documentation for more information.
-       *
-       * Defaults to `{}`.
-       */
-      cache: ClockOptions & {
-          /**
-           * Whether or not to enable the cache.
-           */
-          enabled?: boolean;
-      };
-      /**
-       * Custom pipeline transformers to use. These are executed in the order
-       * they are provided and on each request.
-       */
-      pipelines: PipelineExecutorsManager;
-      /**
-       * The max content length to allow for the response.
-       *
-       * Defaults to `Infinity`.
-       */
-      maxContentLength: number;
-      /**
-       * The response type to use for the request.
-       *
-       * Defaults to `json`.
-       */
-      responseType: ResponseTypes;
-      /**
-       * The encoding to use when converting the response to a string.
-       *
-       * Defaults to `utf8`.
-       */
-      responseEncoding: BufferEncoding;
-      /**
-       * A function that determines whether the request should be considered
-       * successful or not.
-       *
-       * Provides the `InternalConfiguration` object and `status` code.
-       */
-      resolveStatus: ResolveStatus;
-  }
-  ```
-</details>
-
-<details>
-  <summary>Interface</summary>
-
-  ```typescript
-  /**
-   * The return type when configuring the `urbex` client.
-   */
-  export type InternalConfiguration<D = any> = BaseConfiguration<D> & {
-      /**
-       * The url that was provided has been parsed and is ready to be used.
-       */
-      url: URIComponent;
-      /**
-       * The headers object representing the headers that will be sent with the request.
-       *
-       * This uses the internal `UrbexHeaders` class. You are free to use the provided methods.
-       */
-      headers: UrbexHeaders;
-  };
-  ```
-</details>
-
-#### PipelineExecutor
-
-A class that is used to create a new pipeline executor.
-
-#### RequestExecutor
-
-A generic type that is used when instantiating a new `PipelineExecutor` for the request pipeline.
-
-<details>
-  <summary>Type</summary>
-
-  ```typescript
-  /**
-   * The callback to provide when creating a new pipeline executor for a request.
-   */
-  export type RequestExecutor = (config: InternalConfiguration) => Promise<InternalConfiguration>;
-  ```
-</details>
-
-#### ResponseExecutor
-
-A generic type that is used when instantiating a new `PipelineExecutor` for the response pipeline.
-
-<details>
-  <summary>Type</summary>
-
-  ```typescript
-  /**
-   * The callback to provide when creating a new pipeline executor for a response.
-   */
-  export type ResponseExecutor = (config: UrbexResponse) => Promise<UrbexResponse>;
-  ```
-</details>
-
-#### URIComponent
-
-When a url is parsed, it is converted to a custom `URIComponent` object. This object is used to make the request.
-
-<details>
-  <summary>Interface</summary>
-  
-  ```typescript
-  export interface URIComponent {
-    /**
-     * The full url of the request that was passed to the client.
-     */
-    href: string;
-    /**
-     * The origin of the url.
-     */
-    origin: string;
-    /**
-     * The transport protocol to use.
-     *
-     * Defaults to `https://`.
-     */
-    protocol: string;
-    /**
-     * The hostname name to use. If the hostname is not specified, the current domain
-     * will be used. If `environment.isNode` is `true`, then localhost is used.
-     *
-     * The subdomain, domain and tld will be extracted from the hostname.
-     *
-     * E.g. if
-     * the hostname is `https://api.example.com/api/v1`, then the hostname will be `api.example.com`.
-     */
-    hostname: string;
-    /**
-     * If you are making a request that has an api mounted at a different url path, you
-     * can set it here. This is designed to remove the cumbersome task of specifying the full
-     * url path for each request.
-     *
-     * E.g. if you are making a request to `https://example.com/api/v1`, you can set the urlMount to
-     * `/api/v1` and all requests will be made to that url.
-     *
-     * If you do not require this functionality, default it to `null` or `undefined` within the global
-     * configuration.
-     *
-     * Defaults to `/api`.
-     */
-    urlMount: string | null;
-    /**
-     *
-     * The endpoint to use. This is the path that will be appended to the hostname, and after the
-     * urlMount, if one is present.
-     */
-    endpoint: string;
-    /**
-     * The port to use.
-     *
-     * If you do not require this functionality, default it to `null` or `undefined` within the global
-     * configuration.
-     */
-    port: number | string | null;
-    /**
-     * The query string to use in the request.
-     */
-    params: SearchParams;
-  }
-  ```
-</details>
-
-
-#### UrbexConfig
-
-A configuration object that is available to the user when making requests with `urbex`. Either through the `send()` method or a supported HTTP verb.
-
-<details>
-  <summary>Base Configuration</summary>
-
-  ```typescript
-  /**
-   * The base configuration object.
-   */
-  export interface BaseConfiguration<D = any> {
-      /**
-       * Set the default request method to use. This is useful if you find
-       * yourself using the same method for all requests.
-       *
-       * It is recommended when setting this option, to instead use
-       * `urbex.send()`. This will use the method specified in the
-       * request options.
-       *
-       * Defaults to "GET".
-       */
-      method: Methods;
-      /**
-       * Set the default data to use.
-       *
-       * Any additional data passed to the request will not be merged
-       * with the default data.
-       *
-       * Defaults to `null`.
-       */
-      data: D;
-      /**
-       * Set the default timeout to use for all requests.
-       *
-       * Defaults to `0` (no timeout).
-       */
-      timeout: number;
-      /**
-       * Control the internal ttl cache module. Provide a `ttl` value to enable the cache.
-       *
-       * See the [cache-clock](https://github.com/itsmichaelbtw/cache-clock)
-       * documentation for more information.
-       *
-       * Defaults to `{}`.
-       */
-      cache: ClockOptions & {
-          /**
-           * Whether or not to enable the cache.
-           */
-          enabled?: boolean;
-      };
-      /**
-       * Custom pipeline transformers to use. These are executed in the order
-       * they are provided and on each request.
-       */
-      pipelines: PipelineExecutorsManager;
-      /**
-       * The max content length to allow for the response.
-       *
-       * Defaults to `Infinity`.
-       */
-      maxContentLength: number;
-      /**
-       * The response type to use for the request.
-       *
-       * Defaults to `json`.
-       */
-      responseType: ResponseTypes;
-      /**
-       * The encoding to use when converting the response to a string.
-       *
-       * Defaults to `utf8`.
-       */
-      responseEncoding: BufferEncoding;
-      /**
-       * A function that determines whether the request should be considered
-       * successful or not.
-       *
-       * Provides the `InternalConfiguration` object and `status` code.
-       */
-      resolveStatus: ResolveStatus;
-  }
-  ```
-</details>
-
-<details>
-  <summary>Interface</summary>
-
-  ```typescript
-  /**
-   * A configuration object for the `urbex` client used to make requests.
-   */
-  export type UrbexConfig<D = any> = Partial<BaseConfiguration<D>> & {
-      /**
-       * Configure the base url for the client.
-       *
-       * Note: When passing a URI object, the object will be merged with the default URI options.
-       * If you wish to remove the default options, pass `null` as the value for the property.
-       */
-      url?: UrbexURL;
-      /**
-       * Custom headers to be sent with the request. These headers will be merged with the default headers.
-       */
-      headers?: Headers;
-  };
-  ```
-</details>
-
-#### UrbexErrorType
-
-When a request fails, an error is thrown. This is the error interface you will recieve. Internally, this extends the native `Error` object.
-
-<details>
-  <summary>Interface</summary>
-
-  ```typescript
-  /**
-   * The base error class that gets thrown when a request fails.
-   */
-  export interface UrbexErrorType {
-      /**
-       * The status of the error.
-       */
-      status: number;
-      /**
-       * The config object that was used to make the request.
-       */
-      config: InternalConfiguration;
-      /**
-       * The request object that was used to make the request.
-       */
-      request: any;
-      /**
-       * The response object that was returned from the request.
-       */
-      response: UrbexResponse;
-      /**
-       * The error message.
-       */
-      message: string;
-  }
-  ```
-</details>
-
-#### UrbexResponse
-
-The response object that is returned from a successful request.
-
-<details>
-  <summary>Interface</summary>
-
-  ```typescript
-  /**
-   * The response object returned by the `urbex` client when a request is successful.
-   */
-  export interface UrbexResponse<D = any> {
-      /**
-       * The status code of the response.
-       */
-      status: number;
-      /**
-       * The status text of the response.
-       */
-      statusText: string;
-      /**
-       * The headers of the response.
-       */
-      headers: any;
-      /**
-       * The data of the response.
-       */
-      data: D;
-      /**
-       * The request configuration that was used to make the request.
-       */
-      config: InternalConfiguration;
-      /**
-       * The request that was made.
-       */
-      request: any;
-      /**
-       * The response that was received.
-       */
-      response: any;
-      /**
-       * The time it took to make the request in `ms`. This includes
-       * any pipelines that were also executed.
-       *
-       * Uses `Date.now()` to calculate the time.
-       */
-      duration: number;
-      /**
-       * The time the request was made as an ISO string.
-       */
-      timestamp: string;
-      /**
-       * An object indicating its interaction with the cache.
-       */
-      cache: ResponseCachable;
-      /**
-       * The response type that was used to make the request.
-       */
-      responseType: ResponseTypes;
-  }
-```
-</details>
-
-#### UrbexURL
-
-When configuring the client or a request, a url can be provided as either a string or an object. If an object is provided, it will be merged with the default url options.
-
-<details>
-  <summary>Type</summary>
-
-  ```typescript
-  /**
-   * A customizable url object.
-   */
-  export type UrbexURL = Partial<URIComponent> | string;
-  ```
-</details>
+For more information on the types, see the [Urbex Types](lib/exportable-types.ts) file.
 
 ## Change Log
 
