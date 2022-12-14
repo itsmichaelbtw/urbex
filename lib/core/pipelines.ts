@@ -1,4 +1,4 @@
-import { mutate, argumentIsNotProvided, isObject, forEach } from "../utils";
+import { mutate, argumentIsNotProvided, isObject, forEach, isString } from "../utils";
 import { PipelineError } from "../core/error";
 
 type ReturnType<T> = T extends (config: any) => infer R ? R : any;
@@ -24,7 +24,7 @@ export class PipelineExecutor<T extends Function> {
 
             const pipelineResult = await pipeline.execute(config as Parameters<D>);
 
-            if (!isObject(pipelineResult) || argumentIsNotProvided(pipelineResult)) {
+            if (!isObject(pipelineResult)) {
                 throw new PipelineError(
                     "Urbex expected a valid configuration to be returned from a pipeline."
                 );
@@ -36,7 +36,7 @@ export class PipelineExecutor<T extends Function> {
         }
     }
 
-    public execute(config: Parameters<T>): ReturnType<T> {
+    public async execute(config: Parameters<T>): Promise<ReturnType<T>> {
         return this.$executor(config);
     }
 }
