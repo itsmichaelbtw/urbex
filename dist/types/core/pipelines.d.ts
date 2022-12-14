@@ -4,6 +4,6 @@ export declare class PipelineExecutor<T extends Function> {
     private $executor;
     constructor(executor: T);
     static process<T, D extends Function>(config: T, pipelines: PipelineExecutor<D>[]): Promise<void>;
-    execute(config: Parameters<T>): ReturnType<T>;
+    execute(config: Parameters<T>): Promise<ReturnType<T>>;
 }
 export {};

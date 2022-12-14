@@ -1,7 +1,56 @@
 /// <reference types="node" />
 import type { ClockOptions } from "cache-clock";
 import type { PipelineExecutor } from "./core/pipelines";
-import type { UrbexResponse, InternalConfiguration, RequestExecutor, ResponseExecutor } from "./exportable-types";
+import type { URLComponent, UrbexResponse, InternalConfiguration, RequestExecutor, ResponseExecutor } from "./exportable-types";
+/**
+ * Available response types for the request.
+ */
+export type ResponseTypes = "arraybuffer" | "blob" | "document" | "json" | "text" | "stream" | "raw";
+export type Port = number | string;
+/**
+ * The URL component after parsing.
+ */
+export type ParsedURLComponent = URLComponent<string, number>;
+/**
+ * A type representing the `URL` object when attempting to serialize the object.
+ */
+export type SerializeComponent = Partial<URLComponent>;
+/**
+ * Enforce required properties on the `URL` object.
+ */
+export type EnforceComponent = URLComponent;
+/**
+ * User provided values for headers.
+ */
+export type HeaderValues = string | number | boolean | null | undefined;
+/**
+ * Post normalization headers.
+ */
+export type NormalizedHeaders = Record<string, string>;
+/**
+ * Headers object.
+ */
+export type Headers = Record<string, HeaderValues>;
+/**
+ * Search parameters object passed to the `url.search` property.
+ */
+export type CustomSearchParams = [string, string | number | boolean | null | undefined][] | Record<string, any> | string | null;
+export type MethodsUpper = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS";
+export type MethodsLower = "get" | "post" | "put" | "delete" | "patch" | "head" | "options";
+export type Methods = MethodsUpper | MethodsLower;
+export type RequestUrlPath = string;
+/**
+ * A function that determines if the response should resolve or reject.
+ */
+export type ResolveStatus = (config: InternalConfiguration, status: number) => boolean;
+/**
+ * The resolved callback when a request has been fulfilled.
+ */
+export type DispatchedResponse = Promise<UrbexResponse>;
+/**
+ * The resolved callback when the request api has been made.
+ */
+export type DispatchedAPIRequest = Promise<RequestAPIResponse>;
 export interface ResponseCachable {
     /**
      * The key that was used to pull the response from the cache.
@@ -16,7 +65,7 @@ export interface ResponseCachable {
      */
     pulled: boolean;
     /**
-     * If the `NEW` response was stored in the cache.
+     * If the `new` response was stored in the cache.
      */
     stored: boolean;
 }
@@ -35,42 +84,6 @@ export interface RequestAPIResponse {
 export interface IObject<V = any> {
     [key: string]: V;
 }
-/**
- * Available response types for the request.
- */
-export type ResponseTypes = "arraybuffer" | "blob" | "document" | "json" | "text" | "stream" | "raw";
-/**
- * User provided values for headers.
- */
-export type HeaderValues = string | number | boolean | null | undefined;
-/**
- * Post normalization headers.
- */
-export type NormalizedHeaders = Record<string, string>;
-/**
- * Headers object.
- */
-export type Headers = Record<string, HeaderValues>;
-/**
- * Search parameters object passed to the `url.params` property.
- */
-export type SearchParams = URLSearchParams | Record<string, any> | string | null;
-export type MethodsUpper = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS";
-export type MethodsLower = "get" | "post" | "put" | "delete" | "patch" | "head" | "options";
-export type Methods = MethodsUpper | MethodsLower;
-export type RequestUrlPath = string;
-/**
- * A function that determines if the response should resolve or reject.
- */
-export type ResolveStatus = (config: InternalConfiguration, status: number) => boolean;
-/**
- * The resolved callback when a request has been fulfilled.
- */
-export type DispatchedResponse = Promise<UrbexResponse>;
-/**
- * The resolved callback when the request api has been made.
- */
-export type DispatchedAPIRequest = Promise<RequestAPIResponse>;
 /**
  * The execution manager for the request pipeline.
  */
@@ -158,4 +171,12 @@ export interface BaseConfiguration<D = any> {
  */
 export interface UrbexRequestApi {
     send(config: InternalConfiguration): DispatchedAPIRequest;
+}
+/**
+ * The entity that is resolved before concluding the request.
+ */
+export interface ResolvableEntity {
+    data: any;
+    request: any;
+    response: any;
 }

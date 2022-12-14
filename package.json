@@ -1,6 +1,6 @@
 {
   "name": "urbex",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "A fast HTTP client built for NodeJS and the browser. Supports custom pipline transformations, isolated clients and more. ",
   "main": "dist/common/urbex.min.cjs",
   "module": "dist/module/urbex.min.js",

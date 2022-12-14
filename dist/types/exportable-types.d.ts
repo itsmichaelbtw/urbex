@@ -1,5 +1,6 @@
 import type { UrbexHeaders } from "./core/headers";
-import type { BaseConfiguration, SearchParams, Headers, ResponseTypes, ResponseCachable } from "./types";
+import type { URLParser } from "./core/parsers/url-parser";
+import type { BaseConfiguration, CustomSearchParams, Headers, ResponseTypes, ResponseCachable, Port } from "./types";
 /**
  * The callback to provide when creating a new pipeline executor for a request.
  */
@@ -11,7 +12,7 @@ export type ResponseExecutor = (config: UrbexResponse) => Promise<UrbexResponse>
 /**
  * A customizable url object.
  */
-export type UrbexURL = Partial<URIComponent> | string;
+export type UrbexURL = Partial<URLComponent> | string;
 /**
  * A configuration object for the `urbex` client used to make requests.
  */
@@ -35,7 +36,7 @@ export type InternalConfiguration<D = any> = BaseConfiguration<D> & {
     /**
      * The url that was provided has been parsed and is ready to be used.
      */
-    url: URIComponent;
+    url: URLParser;
     /**
      * The headers object representing the headers that will be sent with the request.
      *
@@ -96,69 +97,81 @@ export interface UrbexResponse<D = any> {
     responseType: ResponseTypes;
 }
 /**
- * The base uri component object.
+ * The base URL component object.
  */
-export interface URIComponent {
+export interface URLComponent<SearchType = CustomSearchParams, PortType = Port> {
     /**
-     * The full url of the request that was passed to the client.
+     * The full URL string of the component.
+     *
+     * This value takes **precedence** over all other values when
+     * deserializing a component.
+     *
+     * When serializing a component, this value is ignored.
      */
     href: string;
     /**
-     * The origin of the url.
+     * The origin of the component in the form of
+     * `<protocol>://<hostname>:<port>`.
+     *
+     * This value takes **precedence** over the `protocol`,
+     * `hostname` and `port` values when serializing a component.
      */
     origin: string;
     /**
-     * The transport protocol to use.
-     *
-     * Defaults to `https://`.
+     * The protocol of the URL.
      */
     protocol: string;
     /**
-     * The hostname name to use. If the hostname is not specified, the current domain
-     * will be used. If `environment.isNode` is `true`, then localhost is used.
+     * The username of the URL.
      *
-     * The subdomain, domain and tld will be extracted from the hostname.
+     * This value takes **precedence** over the `username` token
+     * in the `origin` value when serializing a component.
+     */
+    username: string;
+    /**
+     * The password of the URL.
      *
-     * E.g. if
-     * the hostname is `https://api.example.com/api/v1`, then the hostname will be `api.example.com`.
+     * This value takes **precedence** over the `password` token
+     * in the `origin` value when serializing a component.
+     */
+    password: string;
+    /**
+     * The hostname of the URL.
      */
     hostname: string;
     /**
-     * If you are making a request that has an api mounted at a different url path, you
-     * can set it here. This is designed to remove the cumbersome task of specifying the full
-     * url path for each request.
-     *
-     * E.g. if you are making a request to `https://example.com/api/v1`, you can set the urlMount to
-     * `/api/v1` and all requests will be made to that url.
-     *
-     * If you do not require this functionality, default it to `null` or `undefined` within the global
-     * configuration.
-     *
-     * Defaults to `/api`.
+     * The port of the URL.
      */
-    urlMount: string | null;
+    port: PortType;
     /**
-     *
-     * The endpoint to use. This is the path that will be appended to the hostname, and after the
-     * urlMount, if one is present.
+     * The pathname of the URL.
      */
-    endpoint: string;
+    pathname: string;
     /**
-     * The port to use.
+     * The search parameters of the URL as a string.
      *
-     * If you do not require this functionality, default it to `null` or `undefined` within the global
-     * configuration.
+     * Accepts an array, object or string.
+     *
+     * This value takes **precedence** over the `searchParams` value.
      */
-    port: number | string | null;
+    search: SearchType;
     /**
-     * The query string to use in the request.
+     * The search parameters of the URL as an URLSearchParams object.
      */
-    params: SearchParams;
+    searchParams: URLSearchParams;
+    /**
+     * The hash or fragment of the URL.
+     */
+    hash: string;
 }
 /**
  * The base error class that gets thrown when a request fails.
  */
 export interface UrbexErrorType {
+    /**
+     * The name of the error.
+     */
+    name: string;
     /**
      * The status of the error.
      */

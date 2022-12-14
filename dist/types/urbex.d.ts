@@ -33,4 +33,6 @@ export interface ExtendedUrbexClient extends UrbexClient {
 declare const urbex: ExtendedUrbexClient;
 export * from "./exportable-types";
 export * from "./core/pipelines";
+export * from "./core/parsers/url-parser";
+export * from "./core/error";
 export default urbex;

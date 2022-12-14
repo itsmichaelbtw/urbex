@@ -1,5 +1,12 @@
 import type { Headers, NormalizedHeaders } from "../types";
-import { DEFAULT_BROWSER_HEADERS, DEFAULT_NODE_HEADERS } from "./constants";
+declare const DEFAULT_BROWSER_HEADERS: {
+    "Content-Type": string;
+};
+declare const DEFAULT_NODE_HEADERS: {
+    "Content-Type": string;
+} & {
+    "User-Agent": string;
+};
 export declare class UrbexHeaders {
     protected $headers: NormalizedHeaders;
     constructor(headers?: Headers, withDefaults?: boolean);
@@ -44,3 +51,4 @@ export declare class UrbexHeaders {
      */
     normalize(headers: Headers): NormalizedHeaders;
 }
+export {};

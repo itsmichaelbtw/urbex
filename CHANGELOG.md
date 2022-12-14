@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/orison-networks/urbex/compare/v1.2.0...v2.0.0) (2022-12-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* **url-parsing:** `endpoint` has been replaced for `pathname` and `urlMount` is now deprecated
+
+### What's New
+
+* **environment:** url component defaults are now evaluated on the environment directly ([9cb3bfe](https://github.com/orison-networks/urbex/commit/9cb3bfe19fcc841836886c2ab6d5c3deb2f35b66))
+* error classes are now available via named exports ([f3582df](https://github.com/orison-networks/urbex/commit/f3582df2d6b43fd82f5262186657d6cee13c8914))
+* **errors:** improved error handling including support for accurate stack tracing ([7745224](https://github.com/orison-networks/urbex/commit/774522420c007db7debfe1e1a2c1edf14f31fc53))
+* **url-parsing:** an improved and more efficient URL parser ([ce6cd5e](https://github.com/orison-networks/urbex/commit/ce6cd5e4f862f076e273102be6bcdf8342036115))
+* **utils:** `isNumber` helper and added `strict` mode to `merge` ([c0b6bf8](https://github.com/orison-networks/urbex/commit/c0b6bf80fd151b89b02c56297d85c4cee5da357f))
+
+
+### Fixed
+
+* **errors:** internal error spawns caused an uncaught exception if the error was not instance of ([26b5ca7](https://github.com/orison-networks/urbex/commit/26b5ca7052a2b877328895ec848b8d8468659b8d))
+* **headers:** headers incorrectly merging with existing headers ([bae1e95](https://github.com/orison-networks/urbex/commit/bae1e957b4238ace8f55dcdd8dd13529e6937855))
+* parsing configuration caused mutation issues ([9003b5e](https://github.com/orison-networks/urbex/commit/9003b5ee92ae9df50b5a0d1ea5bdbd28e795cdf5))
+* throwing an error inside `resolveStatus` caused an uncaught error ([a2f59a1](https://github.com/orison-networks/urbex/commit/a2f59a10549c5a49f4ce7114cfedf7ad5f59f0d4))
+* **url-parser:** parsing a url incorrectly set the `searchParams` property ([0380507](https://github.com/orison-networks/urbex/commit/0380507b5f68efa9328d428e63868ac2b52efd72))
+* **url-parser:** pathnames assigning an unneeded forward slash to components without hostnames ([ec8acd7](https://github.com/orison-networks/urbex/commit/ec8acd7f92cfc5b33a42a2796be76d5a51cd4c02))
+* **url-parser:** using `set` was not correctly updating the `searchParams` ([2dc734a](https://github.com/orison-networks/urbex/commit/2dc734af90c47bee3dcf7209f28094194e59f9d1))
+
 ## [1.2.0](https://github.com/orison-networks/urbex/compare/v1.1.0...v1.2.0) (2022-11-29)
 
 

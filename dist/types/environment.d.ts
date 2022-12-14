@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { URLParser } from "./core/parsers/url-parser";
 export type UrbexContext = "browser" | "node";
 export declare class Environment {
     private _context;
@@ -11,5 +12,6 @@ export declare class Environment {
     get isNode(): boolean;
     get isDevelopment(): boolean;
     get isProduction(): boolean;
+    getEnvironmentComponent(): URLParser;
 }
 export declare const environment: Environment;
