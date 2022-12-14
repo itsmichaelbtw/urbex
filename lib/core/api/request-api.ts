@@ -9,7 +9,8 @@ import { BrowserRequest } from "./xhr";
 import { startRequest } from "./conclude";
 import { environment } from "../../environment";
 import { UrbexError } from "../error";
-import { deepClone, isUndefined } from "../../utils";
+import { isUndefined } from "../../utils";
+import { DEFAULT_CLIENT_OPTIONS } from "../constants";
 
 export class RequestApi {
     /**
@@ -48,18 +49,10 @@ export class RequestApi {
 
     protected async dispatchRequest(config: InternalConfiguration): DispatchedResponse {
         try {
-            const configuration = deepClone(config);
+            const configuration = config;
             const concludeRequest = await startRequest(configuration);
 
             const isCacheEnabled = configuration.cache && configuration.cache.enabled;
-
-            // for some odd reason, result.cache had this weird mutation
-            // issue even when CLONING the result, so I had to do this
-            // to get it to work properly
-
-            // solved: the clone function that is internally provided
-            // only shallow clones the object, so the cache object
-            // was being mutated. It is now deep cloned.
 
             if (isCacheEnabled) {
                 const cacheKey = this.$cache.getCacheKey(configuration.url.href);

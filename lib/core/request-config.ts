@@ -92,7 +92,9 @@ export class RequestConfig {
             pipelines.response.unshift(decodeResponseData);
         }
 
-        const configuration = deepMerge(DEFAULT_CLIENT_OPTIONS, {
+        const options = deepClone(DEFAULT_CLIENT_OPTIONS);
+
+        const configuration = deepMerge(options, {
             url: envComponent,
             headers: new UrbexHeaders(),
             pipelines: pipelines
@@ -177,8 +179,8 @@ export class RequestConfig {
 
         const headers = UrbexHeaders.construct(configuration.headers, true);
 
-        delete configuration.headers;
-        delete configuration.url;
+        configuration.headers = null;
+        configuration.url = null;
 
         return merge<UrbexConfig, Partial<InternalConfiguration>>(configuration, {
             headers: headers,
@@ -204,9 +206,6 @@ export class RequestConfig {
 
         const mergedHeaders = merge(currentConfig.headers.get(), incomingHeaders);
         const mergedComponent = merge(currentConfig.url.toJSON(), incomingComponent);
-
-        delete config.headers;
-        delete config.url;
 
         const merged = deepMerge(currentConfig, config);
 
