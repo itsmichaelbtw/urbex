@@ -64,21 +64,32 @@ export class BrowserRequest implements UrbexRequestApi {
             }
 
             function createErrorInstance<T extends typeof UrbexError>(
-                instance: T
+                instance: T,
+                error: Error
             ): InstanceType<T> {
-                return UrbexError.createErrorInstance.call({ config, request }, instance);
+                const errorInstance: InstanceType<T> = UrbexError.createFromError.call(
+                    instance,
+                    error
+                );
+                errorInstance.config = config;
+                errorInstance.request = request;
+
+                return errorInstance;
             }
 
             function onTimeout(this: XMLHttpRequest, ev: XMLProgressEvent): void {
-                const timeoutError = createErrorInstance(TimeoutError);
-                timeoutError.timeout = config.timeout;
+                const error = new Error(`Timeout of ${config.timeout}ms exceeded`);
+                const timeoutError = createErrorInstance(TimeoutError, error);
                 _reject(timeoutError);
 
                 manageListeners(listeners, "removeEventListener");
             }
 
             function onAbort(this: XMLHttpRequest, ev: XMLProgressEvent): void {
-                const abortError = createErrorInstance(UrbexError);
+                const abortError = createErrorInstance(
+                    UrbexError,
+                    new Error("Request was aborted")
+                );
                 abortError.message = "The request was aborted.";
                 _reject(abortError);
 
@@ -88,7 +99,7 @@ export class BrowserRequest implements UrbexRequestApi {
             function onError(this: XMLHttpRequest, ev: XMLProgressEvent): void {
                 // https://stackoverflow.com/questions/45067892/xmlhttprequest-onerror-handler-use-case
 
-                const networkError = createErrorInstance(NetworkError);
+                const networkError = createErrorInstance(NetworkError, new Error("Network Error"));
                 _reject(networkError);
 
                 manageListeners(listeners, "removeEventListener");

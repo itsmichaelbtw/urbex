@@ -100,7 +100,7 @@ export class RequestApi {
                 return Promise.reject(error);
             }
 
-            const internalError = UrbexError.create(config);
+            const internalError = UrbexError.createFromError.call(UrbexError, error);
             internalError.message = error.message;
             return Promise.reject(internalError);
         }

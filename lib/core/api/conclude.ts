@@ -11,6 +11,7 @@ import { deepMerge, isEmpty, deepClone, mutate } from "../../utils";
 import { DEFAULT_URBEX_RESPONSE } from "../constants";
 import { environment } from "../../environment";
 import { UrbexHeaders } from "../../core/headers";
+import { UrbexError, PipelineError } from "../error";
 
 type ConcludeRequest = (config: RequestAPIResponse) => Promise<DispatchedResponse>;
 
@@ -25,11 +26,20 @@ export async function startRequest(config: InternalConfiguration): Promise<Concl
         // each new config is passed to the next pipeline
         // the very last config will mutate the `config` parameter
 
-        await PipelineExecutor.process(config, config.pipelines.request);
+        try {
+            await PipelineExecutor.process<InternalConfiguration, RequestExecutor>(
+                config,
+                config.pipelines.request
+            );
+        } catch (error) {
+            const errorInstance: UrbexError = UrbexError.createFromError.call(PipelineError, error);
+            errorInstance.config = config;
+            return Promise.reject(errorInstance);
+        }
     }
 
     return async function concludeRequest(result): Promise<DispatchedResponse> {
-        const incomingResult = deepMerge(clonedResponse, {
+        const incomingResult: UrbexResponse = deepMerge(clonedResponse, {
             data: result.data,
             config: config,
             request: result.request || {},
@@ -69,7 +79,22 @@ export async function startRequest(config: InternalConfiguration): Promise<Concl
         }
 
         if (!isEmpty(config.pipelines.response)) {
-            await PipelineExecutor.process(incomingResult, config.pipelines.response);
+            try {
+                await PipelineExecutor.process<UrbexResponse, ResponseExecutor>(
+                    incomingResult,
+                    config.pipelines.response
+                );
+            } catch (error) {
+                const errorInstance: UrbexError = UrbexError.createFromError.call(
+                    PipelineError,
+                    error
+                );
+                errorInstance.config = config;
+                errorInstance.request = incomingResult.request;
+                errorInstance.response = incomingResult.response;
+                errorInstance.status = incomingResult.status;
+                return Promise.reject(errorInstance);
+            }
         }
 
         const endTime = Date.now();

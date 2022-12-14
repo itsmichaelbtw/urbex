@@ -4,11 +4,20 @@ interface ErrorInstanceBinding {
     config: InternalConfiguration;
     request: any;
 }
+
+function replaceCallStackWithName(stack: string, name: string): string {
+    return stack.replace(/^Error/, name);
+}
+
+/**
+ * Base error class for Urbex that extends the native Error class.
+ */
 export class UrbexError extends Error implements UrbexErrorType {
     status: number;
     request: any;
     config: InternalConfiguration<any>;
     response: UrbexResponse<any>;
+    message: string = "An error occurred while executing a request.";
 
     static create<T extends typeof UrbexError>(
         this: T,
@@ -16,6 +25,7 @@ export class UrbexError extends Error implements UrbexErrorType {
     ): InstanceType<T> {
         const error = new this();
         error.config = config;
+        error.name = this.name;
 
         return error as InstanceType<T>;
     }
@@ -29,29 +39,55 @@ export class UrbexError extends Error implements UrbexErrorType {
         return error as InstanceType<T>;
     }
 
+    static createFromError<T extends typeof UrbexError>(this: T, error: Error): InstanceType<T> {
+        const instance = new this(error.message);
+        instance.stack = replaceCallStackWithName(error.stack, this.name);
+        instance.name = this.name;
+
+        if (UrbexError.isInstance(error)) {
+            instance.name = error.name;
+        }
+
+        return instance as InstanceType<T>;
+    }
+
     static isInstance<T extends typeof UrbexError>(error: any): error is InstanceType<T> {
         return error instanceof UrbexError;
     }
 }
 
+/**
+ * A TimeoutError is thrown when the request takes longer than the specified timeout.
+ */
 export class TimeoutError extends UrbexError {
-    constructor() {
+    constructor(message?: string) {
         super();
 
         this.name = "TimeoutError";
-        this.message = "The request timed out.";
-    }
-
-    public set timeout(timeout: number) {
-        this.message = `Timeout of ${timeout}ms exceeded`;
+        this.message = message || "The request timed out.";
     }
 }
 
+/**
+ * A NetworkError is thrown when the request fails to reach the server.
+ */
 export class NetworkError extends UrbexError {
-    constructor() {
+    constructor(message?: string) {
         super();
 
         this.name = "NetworkError";
-        this.message = "Failed to request the resource.";
+        this.message = message || "Failed to request the resource.";
+    }
+}
+
+/**
+ * A PipelineError is thrown when executing a pipeline fails.
+ */
+export class PipelineError extends UrbexError {
+    constructor(message?: string) {
+        super();
+
+        this.name = "PipelineError";
+        this.message = message || "An error occurred while executing a pipeline.";
     }
 }

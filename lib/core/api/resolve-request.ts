@@ -19,11 +19,6 @@ export function resolveRequest(
     entity: ResolvableEntity
 ): void {
     const status = environment.isNode ? entity.response.statusCode : entity.response.status;
-    const errorInstance: UrbexError = UrbexError.createErrorInstance.call(this, UrbexError);
-
-    errorInstance.status = status;
-    errorInstance.response = entity.response;
-    errorInstance.request = this.request;
 
     try {
         const canResolve = this.config.resolveStatus(this.config, status);
@@ -31,6 +26,12 @@ export function resolveRequest(
         if (canResolve) {
             return resolve(entity);
         }
+
+        const errorInstance: UrbexError = UrbexError.createErrorInstance.call(this, UrbexError);
+
+        errorInstance.status = status;
+        errorInstance.response = entity.response;
+        errorInstance.request = this.request;
 
         if (environment.isNode) {
             errorInstance.message = entity.response.statusMessage;
@@ -44,7 +45,14 @@ export function resolveRequest(
 
         return reject(errorInstance);
     } catch (error) {
+        const errorInstance: UrbexError = UrbexError.createFromError.call(UrbexError, error);
+
         errorInstance.message = error.message;
+        errorInstance.config = this.config;
+        errorInstance.request = this.request;
+        errorInstance.response = entity.response;
+        errorInstance.status = status;
+
         return reject(errorInstance);
     }
 }

@@ -68,9 +68,17 @@ export class NodeRequest implements UrbexRequestApi {
             }
 
             function createErrorInstance<T extends typeof UrbexError>(
-                instance: T
+                instance: T,
+                error: Error
             ): InstanceType<T> {
-                return UrbexError.createErrorInstance.call({ config, request }, instance);
+                const errorInstance: InstanceType<T> = UrbexError.createFromError.call(
+                    instance,
+                    error
+                );
+                errorInstance.config = config;
+                errorInstance.request = request;
+
+                return errorInstance;
             }
 
             function onData(this: Buffer[], data: any): void {
@@ -82,8 +90,7 @@ export class NodeRequest implements UrbexRequestApi {
                     return _reject(error);
                 }
 
-                const errorInstance = createErrorInstance(NetworkError);
-                errorInstance.message = error.message;
+                const errorInstance = createErrorInstance(NetworkError, error);
                 return _reject(errorInstance);
             }
 
@@ -104,8 +111,8 @@ export class NodeRequest implements UrbexRequestApi {
             }
 
             function onTimeout(): void {
-                const timeoutError = createErrorInstance(TimeoutError);
-                timeoutError.timeout = config.timeout;
+                const error = new Error(`Timeout of ${config.timeout}ms exceeded`);
+                const timeoutError = createErrorInstance(TimeoutError, error);
 
                 request.destroy(timeoutError);
             }
