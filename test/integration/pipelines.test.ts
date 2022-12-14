@@ -162,17 +162,14 @@ describe("pipelines", () => {
 
             const requestPipelines = [
                 new PipelineExecutor<RequestExecutor>((config) => {
-                    config.data = "Hello";
                     tokens.push("1");
                     return Promise.resolve(config);
                 }),
                 new PipelineExecutor<RequestExecutor>((config) => {
-                    config.data += " World";
                     tokens.push("2");
                     return Promise.resolve(config);
                 }),
                 new PipelineExecutor<RequestExecutor>((config) => {
-                    config.data += "!";
                     tokens.push("3");
                     return Promise.resolve(config);
                 })
@@ -185,8 +182,6 @@ describe("pipelines", () => {
             });
 
             chai.expect(response).to.be.an("object");
-            chai.expect(response).to.have.property("data");
-            chai.expect(response.config.data).to.equal("Hello World!");
             chai.expect(tokens).to.deep.equal(["1", "2", "3"]);
         });
 
@@ -306,12 +301,18 @@ describe("pipelines", () => {
                 new PipelineExecutor<RequestExecutor>((config) => {
                     config.url.pathname = "/200";
                     config.url.setSearchParams(new URLSearchParams("test=1"));
+                    config.headers.set({
+                        "test-header": "1"
+                    });
 
                     return Promise.resolve(config);
                 }),
                 new PipelineExecutor<RequestExecutor>((config) => {
                     chai.expect(config.url.pathname).to.equal("/200");
                     chai.expect(config.url.searchParams.get("test")).to.equal("1");
+                    config.headers.set({
+                        "test-header-2": "2"
+                    });
 
                     return Promise.resolve(config);
                 })
@@ -325,10 +326,15 @@ describe("pipelines", () => {
 
             chai.expect(response.status).to.equal(200);
             chai.expect(response.config.url.pathname).to.equal("/200");
+            chai.expect(response.config.url.searchParams.get("test")).to.equal("1");
+            chai.expect(response.config.headers.get()["test-header"]).to.equal("1");
+            chai.expect(response.config.headers.get()["test-header-2"]).to.equal("2");
 
             chai.expect(client.config.url.href).to.equal(SERVER_URL);
             chai.expect(client.config.url.pathname).to.equal("");
             chai.expect(client.config.url.searchParams.get("test")).to.equal(null);
+            chai.expect(client.config.headers.get()["test-header"]).to.equal(undefined);
+            chai.expect(client.config.headers.get()["test-header-2"]).to.equal(undefined);
         });
     });
 });
