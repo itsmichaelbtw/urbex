@@ -28,7 +28,8 @@
   "scripts": {
     "start": "nodemon --watch scripts --watch lib --exec \"npm run server\"",
     "test": "concurrently --success first -k \"npm run server:wait && npm run test:mocha && npm run test:karma\" \"npm run server\"",
-    "test:mocha": "nyc --reporter=html -t .nyc ts-mocha -p tsconfig.json --recursive test/**/*.test.ts && rimraf .nyc",
+    "test:mocha": "ts-mocha -p tsconfig.json --recursive test/**/*.test.ts",
+    "test:mocha:coverage": "nyc --reporter=html -t .nyc npm run test:mocha && rimraf .nyc",
     "test:karma": "karma start karma.config.cjs --single-run",
     "server": "node --experimental-specifier-resolution=node --loader ts-node/esm scripts/cli-server.ts",
     "server:wait": "wait-on -t 2500 http://localhost:8080",
