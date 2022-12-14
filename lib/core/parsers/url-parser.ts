@@ -38,12 +38,15 @@ export class URLParser extends BaseURLParser {
     /**
      * Set a component object without enforcing the component to serialize
      * or parse. Merges the component with the existing component.
+     *
+     * This does not validate the component.
      */
     public set(component: SerializeComponent): this {
         this.$component = merge(this.$component, component);
 
-        if (component.searchParams) {
-            this.setSearchParams(component.searchParams);
+        if (component.searchParams instanceof URLSearchParams) {
+            this.$component.search = component.searchParams.toString();
+            this.$component.searchParams = component.searchParams;
         }
 
         return this;
