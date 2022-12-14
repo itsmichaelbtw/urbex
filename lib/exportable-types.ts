@@ -44,10 +44,6 @@ export type UrbexConfig<D = any> = Partial<BaseConfiguration<D>> & {
     headers?: Headers;
 };
 
-// I want to replace the `search` property on the URLComponent interface with this:
-// search: string
-// how can I do this without having to copy the entire interface and also losing documentation?
-
 /**
  * The return type when configuring the `urbex` client.
  */
