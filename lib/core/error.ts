@@ -40,8 +40,16 @@ export class UrbexError extends Error implements UrbexErrorType {
     }
 
     static createFromError<T extends typeof UrbexError>(this: T, error: Error): InstanceType<T> {
+        if (!(error instanceof Error)) {
+            error = new Error(error);
+        }
+
         const instance = new this(error.message);
-        instance.stack = replaceCallStackWithName(error.stack, this.name);
+
+        if (error.stack) {
+            instance.stack = replaceCallStackWithName(error.stack, this.name);
+        }
+
         instance.name = this.name;
 
         if (UrbexError.isInstance(error)) {
