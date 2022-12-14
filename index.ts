@@ -1,4 +1,11 @@
-import urbex, { PipelineExecutor, URLParser } from "./lib/urbex";
+import urbex, {
+    PipelineExecutor,
+    URLParser,
+    UrbexError,
+    TimeoutError,
+    NetworkError,
+    PipelineError
+} from "./lib/urbex";
 
 // since this package has a named export and a default export, rollup
 // uses `output.exports: "named"` to make the named export the default
@@ -14,10 +21,18 @@ declare module "./lib/urbex" {
     interface ExtendedUrbexClient {
         PipelineExecutor: typeof PipelineExecutor;
         URLParser: typeof URLParser;
+        UrbexError: typeof UrbexError;
+        TimeoutError: typeof TimeoutError;
+        NetworkError: typeof NetworkError;
+        PipelineError: typeof PipelineError;
     }
 }
 
 urbex.PipelineExecutor = PipelineExecutor;
 urbex.URLParser = URLParser;
+urbex.UrbexError = UrbexError;
+urbex.TimeoutError = TimeoutError;
+urbex.NetworkError = NetworkError;
+urbex.PipelineError = PipelineError;
 
 export default urbex;

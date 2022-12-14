@@ -52,5 +52,6 @@ export * from "./exportable-types";
 export * from "./core/pipelines";
 // export * from "./core/headers";
 export * from "./core/parsers/url-parser";
+export * from "./core/error";
 
 export default urbex;
