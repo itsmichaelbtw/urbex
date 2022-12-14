@@ -149,6 +149,7 @@ export class BaseURLParser {
         }
 
         this.$component = createEmptyScheme<EnforceComponent>(URL_COMPONENT_KEYS, "");
+        this.$component.searchParams = new URLSearchParams();
 
         if (isString(input) && input) {
             this.$component = this.parse(input);
@@ -332,6 +333,7 @@ export class BaseURLParser {
         }
 
         const component = createEmptyScheme<EnforceComponent>(URL_COMPONENT_KEYS, "");
+        component.searchParams = new URLSearchParams();
 
         if (overwrite) {
             this.$component = component;
@@ -436,7 +438,11 @@ export class BaseURLParser {
 
         if (searchParams) {
             if (searchParams instanceof URLSearchParams) {
-                tokens.push(ensureLeadingToken("?", searchParams.toString()));
+                const search = searchParams.toString();
+
+                if (search) {
+                    tokens.push(ensureLeadingToken("?", search));
+                }
             } else {
                 const { search } = convertSearchParamsToString(searchParams.toString());
                 tokens.push(ensureLeadingToken("?", search));
