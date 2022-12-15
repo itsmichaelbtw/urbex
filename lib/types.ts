@@ -123,8 +123,8 @@ export interface IObject<V = any> {
  * The execution manager for the request pipeline.
  */
 export interface PipelineExecutorsManager {
-    request?: PipelineExecutor<RequestExecutor>[];
-    response?: PipelineExecutor<ResponseExecutor>[];
+    request: PipelineExecutor<RequestExecutor>[];
+    response: PipelineExecutor<ResponseExecutor>[];
 }
 
 /**
@@ -171,11 +171,6 @@ export interface BaseConfiguration<D = any> {
          */
         enabled?: boolean;
     };
-    /**
-     * Custom pipeline transformers to use. These are executed in the order
-     * they are provided and on each request.
-     */
-    pipelines: PipelineExecutorsManager;
     /**
      * The max content length to allow for the response.
      *

@@ -9,7 +9,8 @@ import type {
     ResponseTypes,
     ResponseCachable,
     Port,
-    ParsedURLComponent
+    ParsedURLComponent,
+    PipelineExecutorsManager
 } from "./types";
 
 /**
@@ -42,6 +43,11 @@ export type UrbexConfig<D = any> = Partial<BaseConfiguration<D>> & {
      * Custom headers to be sent with the request. These headers will be merged with the default headers.
      */
     headers?: Headers;
+    /**
+     * Custom pipeline transformers to use. These are executed in the order
+     * they are provided and on each request.
+     */
+    pipelines?: Partial<PipelineExecutorsManager>;
 };
 
 /**
@@ -58,6 +64,13 @@ export type InternalConfiguration<D = any> = BaseConfiguration<D> & {
      * This uses the internal `UrbexHeaders` class. You are free to use the provided methods.
      */
     headers: UrbexHeaders;
+    /**
+     * Custom pipeline transformers to use. These are executed in the order
+     * they are provided and on each request.
+     *
+     * This includes the default pipelines based on the current environment.
+     */
+    pipelines: PipelineExecutorsManager;
 };
 
 /**
