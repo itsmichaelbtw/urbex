@@ -18,7 +18,7 @@ import {
     clone,
     isString,
     isObject,
-    argumentIsNotProvided,
+    isNil,
     hasOwnProperty,
     stringReplacer,
     forEach,
@@ -62,7 +62,7 @@ export interface UrbexClient {
 }
 
 function createMethodConfig(method: Methods, uri: UrbexURL, config: UrbexConfig): UrbexConfig {
-    if (argumentIsNotProvided(uri)) {
+    if (isNil(uri)) {
         throw new Error(
             "Attempted to call a HTTP method without providing a URL. If you want to use the default URL, use `urbex.send` instead."
         );

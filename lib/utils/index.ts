@@ -1,15 +1,26 @@
-import type { IObject } from "./types";
+import type { IObject } from "../types";
+import type { UrbexHeaders } from "../core/headers";
+
+import {
+    isNil,
+    isUndefined,
+    isNull,
+    isArray,
+    isObject,
+    isEmpty,
+    isObjectLike,
+    isDate,
+    isFunction,
+    isArrayBuffer,
+    isBuffer
+} from "./is-x";
 
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
     ? I
     : never;
 
-/**
- * Check the Object.prototype.toString.call() of a value. Strips the [object ] part.
- */
-export function toStringCall(value: any): string {
-    const string = Object.prototype.toString.call(value);
-    return lowercase(string.substring(8, string.length - 1));
+export function asString(value: any): string {
+    return Object.prototype.toString.call(value);
 }
 
 export function hasOwnProperty<X extends {}, Y extends PropertyKey>(
@@ -17,57 +28,6 @@ export function hasOwnProperty<X extends {}, Y extends PropertyKey>(
     prop: Y
 ): obj is X & Record<Y, unknown> {
     return obj.hasOwnProperty.call(obj, prop);
-}
-
-export function isUndefined(value: unknown): value is undefined {
-    return typeof value === "undefined";
-}
-
-export function isNegative(value: number): boolean {
-    return value < 0;
-}
-
-export function isPositive(value: number): boolean {
-    return value > 0;
-}
-
-export function absolute(value: number): number {
-    return Math.abs(value);
-}
-
-export function round(value: number, precision: number): number {
-    const multiplier = Math.pow(10, precision);
-    return Math.round(value * multiplier) / multiplier;
-}
-
-export function isArray<T>(value: unknown): value is T[] {
-    return Array.isArray(value);
-}
-
-export function isObject(value: unknown): value is object {
-    return typeof value === "object" && value !== null && !isArray(value);
-}
-
-export function isString(value: unknown): value is string {
-    return typeof value === "string";
-}
-
-export function isFunction(value: unknown): value is Function {
-    return typeof value === "function";
-}
-
-export function isNumber(value: unknown): value is number {
-    return typeof value === "number";
-}
-
-export function isEmpty(value: any): boolean {
-    if (isArray(value)) {
-        return value.length === 0;
-    } else if (isObject(value)) {
-        return Object.keys(value).length === 0;
-    } else {
-        return !value;
-    }
 }
 
 export function capitalize(value: string): string {
@@ -160,10 +120,6 @@ export function keys<T extends IObject>(obj: T): (keyof T)[] {
     return Object.keys(obj) as (keyof T)[];
 }
 
-export function values<T extends IObject>(obj: T): T[keyof T][] {
-    return keys(obj).map((key) => obj[key]);
-}
-
 export function forEach<T>(obj: T, fn: (key: keyof T, value: T[keyof T], obj: T) => void): void {
     if (isUndefined(obj)) {
         return;
@@ -180,37 +136,12 @@ export function forEach<T>(obj: T, fn: (key: keyof T, value: T[keyof T], obj: T)
     }
 }
 
-export function extractMatchFromRegExp(
-    value: string | null,
-    regexp: RegExp,
-    group = 0,
-    defaultValue: any = null
-): string | null {
-    if (value) {
-        const matches = regexp.exec(value);
-
-        if (isArray(matches) && !isEmpty(matches)) {
-            return matches[group];
-        }
-    }
-
-    return defaultValue;
-}
-
-export function startsWithReplacer(value: string, search: string, replace: string): string {
-    if (value.startsWith(search)) {
-        return value.replace(search, replace);
-    }
-
-    return value;
-}
-
 export function stringReplacer(value: string, search: string | RegExp, replace: string): string {
     return value.replace(search, replace);
 }
 
 export function ensureLeadingToken(token: string, value: string): string {
-    if (argumentIsNotProvided(value)) {
+    if (isNil(value)) {
         return "";
     }
 
@@ -222,7 +153,7 @@ export function ensureLeadingToken(token: string, value: string): string {
 }
 
 export function ensureTrailingToken(token: string, value: string): string {
-    if (argumentIsNotProvided(value)) {
+    if (isNil(value)) {
         return "";
     }
 
@@ -233,20 +164,8 @@ export function ensureTrailingToken(token: string, value: string): string {
     return `${value}${token}`;
 }
 
-export function argumentIsNotProvided(value: unknown): boolean {
-    return value === undefined || value === null;
-}
-
 export function combineStrings(delimiter = "", ...strings: string[]): string {
     return strings.filter((string) => !isEmpty(string)).join(delimiter);
-}
-
-export function replaceObjectProperty<T extends IObject, K extends keyof T>(
-    obj: T,
-    key: K,
-    value: T[K]
-): void {
-    Object.assign(obj, { [key]: value });
 }
 
 export function safeStringify(value: any): string {
@@ -294,3 +213,60 @@ export function mutate<T>(value: T, mutator: (value: T) => void): T {
     mutator(value);
     return value;
 }
+
+export function convertToEncodedForm(data: any) {
+    const searchParams = new URLSearchParams();
+
+    function convert(value: any) {
+        if (isNil(value)) {
+            return "";
+        } else if (isDate(value)) {
+            return value.toISOString();
+        } else {
+            return value;
+        }
+    }
+
+    function serialize(key: string, value: any) {
+        if (value === null) {
+            return;
+        }
+
+        const shouldStringify = key.endsWith("{}");
+
+        if (shouldStringify) {
+            key = key.replace("{}", "");
+            value = safeStringify(value);
+        } else {
+            if (isArray(value)) {
+                return forEach(value, (k, v) => {
+                    serialize(`${key}[${k.toString()}]`, v);
+                });
+            } else if (isObject(value)) {
+                return forEach(value, (k, v) => {
+                    serialize(`${key}[${k}]`, v);
+                });
+            }
+        }
+
+        searchParams.append(key, convert(value));
+    }
+
+    forEach(data, (key, value) => {
+        serialize(key as string, value);
+    });
+
+    console.log(searchParams);
+
+    return searchParams.toString();
+}
+
+export function ensureContentLength(this: UrbexHeaders, byteLength: number) {
+    if (byteLength > 0 && !this.has("Content-Length")) {
+        this.set({
+            "Content-Length": byteLength
+        });
+    }
+}
+
+export * from "./is-x";

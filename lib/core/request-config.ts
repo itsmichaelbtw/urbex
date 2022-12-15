@@ -12,9 +12,8 @@ import {
     deepClone,
     hasOwnProperty,
     isString,
-    extractMatchFromRegExp,
     uppercase,
-    argumentIsNotProvided,
+    isNil,
     isEmpty,
     isFunction
 } from "../utils";
@@ -125,7 +124,7 @@ export class RequestConfig {
         config: UrbexConfig,
         allowEndpoints: boolean
     ): Partial<InternalConfiguration> {
-        if (argumentIsNotProvided(config) || !isObject(config)) {
+        if (isNil(config) || !isObject(config)) {
             throw new Error("The configuration must be an object with valid properties.");
         }
 
@@ -196,7 +195,7 @@ export class RequestConfig {
     public merge(
         config?: InternalConfiguration | Partial<InternalConfiguration>
     ): InternalConfiguration {
-        if (argumentIsNotProvided(config) || !isObject(config) || isEmpty(config)) {
+        if (isNil(config) || !isObject(config) || isEmpty(config)) {
             return this.get();
         }
 

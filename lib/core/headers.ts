@@ -8,7 +8,7 @@ import {
     forEach,
     merge,
     capitalize,
-    argumentIsNotProvided,
+    isNil,
     isEmpty,
     isString,
     lowercase,
@@ -115,7 +115,7 @@ export class UrbexHeaders {
      * Parse a headers string into an object
      */
     static parse(headers: string): NormalizedHeaders {
-        if (argumentIsNotProvided(headers) || !isString(headers)) {
+        if (isNil(headers) || !isString(headers)) {
             return {};
         }
 
@@ -167,7 +167,7 @@ export class UrbexHeaders {
      * Get a header by a given key
      */
     public get(key: string): string {
-        if (argumentIsNotProvided(key)) {
+        if (isNil(key)) {
             return "";
         }
 
@@ -219,7 +219,7 @@ export class UrbexHeaders {
      * Normalize an incoming headers object
      */
     public normalize(headers: Headers): NormalizedHeaders {
-        if (argumentIsNotProvided(headers) || !isObject(headers)) {
+        if (isNil(headers) || !isObject(headers)) {
             return {};
         }
 

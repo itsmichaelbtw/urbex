@@ -1,4 +1,4 @@
-import { mutate, argumentIsNotProvided, isObject, forEach, isString } from "../utils";
+import { mutate, isNil, isObject, forEach, isString } from "../utils";
 import { PipelineError } from "../core/error";
 
 type ReturnType<T> = T extends (config: any) => infer R ? R : any;
