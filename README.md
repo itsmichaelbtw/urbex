@@ -15,6 +15,8 @@
 - [Usage](#usage)
 - [Examples](#examples)
 - [API Design](#api-design)
+  - [Verb Aliases](#verb-aliases)
+  - [Request Lifecycle](#request-lifecycle)
 - [Configuring the client](#configuring-the-client)
   - [Environment Defaults](#environment-defaults)
 - [Isolated Clients](#isolated-clients)
@@ -172,6 +174,21 @@ Note: On each request, the global configuration is cloned and merged with the re
 
 It is recommended if you find yourself only requesting data from the same URL with the same method, to use `urbex.send` instead. 
 
+### Request Lifecycle
+
+A lifecycle of a request is merely broken down into 5 stages:
+
+1. **Request Initiation**
+This is where the request is initiated and the current time is captured for a point of reference. All `request` pipelines are executed here in order and modifications are made to the request configuration.
+2. **Cache Lookup**
+If you have enabled the cache module, the cache is checked to see if the request has been made before. If it has, conclude the request early (stage 4), else continue to stage 3.
+3. **Perform Request**
+The request is made and the response is captured. This is where the `resolveStatus` function is called to determine if the request was successful or not. Any errors caught here are automatically thrown and caught by the `catch` block.
+4. **Conclude Request**
+Once the request has been resolved, a response is created and returned. All `response` pipelines are executed here in order and modifications are made to the response. Finally, the duration of the request is calculated and the response is returned.
+5. **Cache Response**
+If you have the enabled the cache module, the response is cached for future use. The value cached is *after* executing the `response` pipelines.
+
 ## Configuring the client
 
 The client can be configured globally or on a per-request basis. The global configuration is the default configuration that is used for all requests. The per-request configuration is used to override the global configuration for a specific request. You are freely able to use both the global and per-request configuration at the same time, along with calling `.configure()` multiple times. All configurations are merged together in the order they are called.
@@ -286,7 +303,7 @@ Note: For every isolated client that is instantiated, a new instance of the `Cac
 
 ## Pipeline Transformers
 
-Pipeline transformers allow you to take control over how the configuration is managed throughout the life-cycle of a request. Both request and response pipelines are supported. The request pipeline is used to transform the request configuration before the request is made. The response pipeline is used to transform the response data before it is returned to the user.
+Pipeline transformers allow you to take control over how the configuration is managed throughout the lifecycle of a request. Both request and response pipelines are supported. The request pipeline is used to transform the request configuration before the request is made. The response pipeline is used to transform the response data before it is returned to the user. Read more about the [request lifecycle](#request-lifecycle).
 
 There are mandatory pipelines that are evaluated at runtime. These are vital to the core functionality of the client, such as setting appropriate headers, decoding response data, and automatic JSON parsing. See [transformers](lib/core/transformers.ts) for more information on the default pipelines.
 
@@ -330,7 +347,49 @@ urbex.get("/users", {
 })
 ```
 
-Pipeline executors can be globally registered, or on a per-request basis. Responses that are pulled from the internal cache module still go through the response pipeline. This is to ensure that the response is transformed correctly. Each `PipelineExecutor` instance only registers one pipeline. If you wish to register multiple pipelines, you must create multiple instances of the `PipelineExecutor` class. There is no limit to the number of pipelines that can be registered.
+Pipeline transformers can be globally registered, or on a per-request basis. Responses that are pulled from the internal cache module still go through the response pipeline. This is to ensure that the response is transformed correctly. Each `PipelineExecutor` instance only registers one pipeline. If you wish to register multiple pipelines, you must create multiple instances of the `PipelineExecutor` class. There is no limit to the number of pipelines that can be registered.
+
+```typescript
+const requestPipelines = [
+  new PipelineExecutor<RequestExecutor>((config) => {
+    // Do something with the request configuration
+    return Promise.resolve(config)
+  }),
+  new PipelineExecutor<RequestExecutor>((config) => {
+    // Do something with the request configuration
+    // this will have access to the configuration after the previous pipeline has been executed
+    return Promise.resolve(config)
+  })
+];
+
+const responsePipelines = [
+  new PipelineExecutor<ResponseExecutor>((config) => {
+    // Do something with the response configuration
+    return Promise.resolve(config)
+  }),
+  new PipelineExecutor<ResponseExecutor>((config) => {
+    // Do something with the response configuration
+    // this will have access to the configuration after the previous pipeline has been executed
+    return Promise.resolve(config)
+  })
+];
+
+urbex.configure({
+  pipelines: {
+    request: requestPipelines,
+    response: responsePipelines
+  }
+})
+
+// or
+
+urbex.get("/users", {
+  pipelines: {
+    request: requestPipelines,
+    response: responsePipelines
+  }
+})
+```
 
 Whilst a simple integration, this is a powerful feature that allows you to perform any logic/operation before and after a request has been made. 
 
@@ -358,7 +417,7 @@ You can also eject a pipeline from the pipeline chain using `ejectPipeline(pipel
 
 ## Internal Cache Module
 
-All requests, if configured, are cached internally. This is done to reduce the number of requests that are made to the server. The cache is based on the request configuration and the response data. The cache is cleared when the client is stopped. Before a request is made, the cache is checked to see if the request has been made before. If it has, the cached response is returned. If it has not, the request is made and the response is cached. The href of the request is used as the key for the cache. The **raw** result from the server request is cached, not the transformed response.
+All requests, if configured, are cached internally. This is done to reduce the number of requests that are made to the server. The cache is based on the request configuration and the response data. The cache is cleared when the client is stopped. Before a request is made, the cache is checked to see if the request has been made before. If it has, the cached response is returned. If it has not, the request is made and the response is cached. The href of the request is used as the key for the cache. 
 
 All pipelines are executed even if the request is cached. You may control this behaviour by using the `cache` option in the request configuration.
 
