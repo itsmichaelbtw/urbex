@@ -12,6 +12,7 @@ import urbex, {
 } from "../../lib/urbex";
 import { UrbexHeaders } from "../../lib/core/headers";
 import { DEFAULT_CLIENT_OPTIONS } from "../../lib/core/constants";
+import { deepClone } from "../../lib/utils";
 
 const client = urbex.isolateClient({
     url: SERVER_URL
@@ -158,7 +159,7 @@ describe("pipelines", () => {
     });
 
     it("pushing a new pipeline should get executed", async () => {
-        const config = DEFAULT_CLIENT_OPTIONS;
+        const config = deepClone(DEFAULT_CLIENT_OPTIONS);
 
         const pipelines = [
             new PipelineExecutor<RequestExecutor>((config) => {
