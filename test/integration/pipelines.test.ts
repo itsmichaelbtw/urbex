@@ -11,6 +11,7 @@ import urbex, {
     PipelineError
 } from "../../lib/urbex";
 import { UrbexHeaders } from "../../lib/core/headers";
+import { DEFAULT_CLIENT_OPTIONS } from "../../lib/core/constants";
 
 const client = urbex.isolateClient({
     url: SERVER_URL
@@ -154,6 +155,36 @@ describe("pipelines", () => {
         chai.expect(config).to.have.property("data");
         chai.expect(config.data).to.equal("Hello World!");
         chai.expect(tokens).to.deep.equal(["1", "2", "3"]);
+    });
+
+    it("pushing a new pipeline should get executed", async () => {
+        const config = DEFAULT_CLIENT_OPTIONS;
+
+        const pipelines = [
+            new PipelineExecutor<RequestExecutor>((config) => {
+                config.pipelines.request.push(
+                    new PipelineExecutor<RequestExecutor>((config) => {
+                        config.headers.set({
+                            "Nested-Pipeline": "executed"
+                        });
+                        return Promise.resolve(config);
+                    })
+                );
+                return Promise.resolve(config);
+            })
+        ];
+
+        const response = await client.get("/200", {
+            pipelines: {
+                request: pipelines
+            }
+        });
+
+        await PipelineExecutor.process<InternalConfiguration, RequestExecutor>(config, pipelines);
+
+        chai.expect(response).to.be.an("object");
+        chai.expect(response.config.headers.get("nested-pipeline")).to.equal("executed");
+        chai.expect(response.config.pipelines.request.length).to.equal(3);
     });
 
     describe("when making a request", () => {
