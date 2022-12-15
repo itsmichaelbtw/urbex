@@ -53,7 +53,8 @@ export const transformRequestData = new PipelineExecutor<RequestExecutor>((confi
     if (isArrayBuffer(config.data) || isArrayBufferView(config.data)) {
         config.data = toBuffer(config.data);
 
-        ensureContentLength.call(config.headers, config.data.byteLength);
+        const size = config.data.byteLength ?? config.data.size;
+        ensureContentLength.call(config.headers, size);
         return Promise.resolve(config);
     }
 
