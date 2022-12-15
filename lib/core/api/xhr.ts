@@ -18,7 +18,6 @@ interface BindableEventListener {
     listener: XMLEventListener;
 }
 
-type BrowserResponseTypes = "arraybuffer" | "blob" | "document" | "json" | "text";
 type XMLProgressEvent = ProgressEvent<EventTarget>;
 
 type XMLEventListener = (this: XMLHttpRequest, ev: XMLProgressEvent) => void;
@@ -46,7 +45,7 @@ export class BrowserRequest implements UrbexRequestApi {
                 BROWSER_RESPONSE_TYPES.includes(config.responseType) &&
                 config.responseType !== "json"
             ) {
-                request.responseType = config.responseType as BrowserResponseTypes;
+                request.responseType = config.responseType as XMLHttpRequestResponseType;
             }
 
             if (isUndefined(config.data)) {
@@ -90,7 +89,6 @@ export class BrowserRequest implements UrbexRequestApi {
                     UrbexError,
                     new Error("Request was aborted")
                 );
-                abortError.message = "The request was aborted.";
                 _reject(abortError);
 
                 manageListeners(listeners, "removeEventListener");
