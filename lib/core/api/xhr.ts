@@ -53,7 +53,7 @@ export class BrowserRequest implements UrbexRequestApi {
                 config.headers.delete("Content-Type");
             }
 
-            forEach(config.headers.get(), request.setRequestHeader.bind(request));
+            forEach(config.headers.getAll(), request.setRequestHeader.bind(request));
 
             if (config.timeout) {
                 request.timeout = config.timeout;

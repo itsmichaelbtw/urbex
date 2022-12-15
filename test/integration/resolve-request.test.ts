@@ -59,7 +59,7 @@ describe("resolve-request", () => {
                 ]
             },
             resolveStatus: (config, status) => {
-                chai.expect(config.headers.get().Chai).to.equal("expect");
+                chai.expect(config.headers.get("chai")).to.equal("expect");
                 return status >= 200 && status < 300;
             }
         });

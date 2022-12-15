@@ -18,7 +18,8 @@ import { debug } from "../debug";
 import { environment } from "../environment";
 
 const DEFAULT_BROWSER_HEADERS = {
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    Accept: "application/json, */*"
 };
 
 const DEFAULT_NODE_HEADERS = merge(DEFAULT_BROWSER_HEADERS, {
@@ -161,10 +162,25 @@ export class UrbexHeaders {
 
         return (this.$headers = merged);
     }
+
+    /**
+     * Get a header by a given key
+     */
+    public get(key: string): string {
+        if (argumentIsNotProvided(key)) {
+            return "";
+        }
+
+        const headers = this.$headers;
+
+        const headerKey = parseHeaderKey(key);
+        return headers[headerKey];
+    }
+
     /**
      * Get the current headers object
      */
-    public get(): NormalizedHeaders {
+    public getAll(): NormalizedHeaders {
         return this.$headers;
     }
 

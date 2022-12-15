@@ -26,10 +26,11 @@ describe("headers", () => {
             this.skip();
         }
 
-        const headersObj = headers.get();
+        const headersObj = headers.getAll();
 
         chai.expect(headersObj).to.have.property("Content-Type");
-        chai.expect(Object.keys(headersObj)).to.have.lengthOf(1);
+        chai.expect(headersObj).to.have.property("Accept");
+        chai.expect(Object.keys(headersObj)).to.have.lengthOf(2);
     });
 
     it("default headers should be set (node)", function () {
@@ -37,11 +38,12 @@ describe("headers", () => {
             this.skip();
         }
 
-        const headersObj = headers.get();
+        const headersObj = headers.getAll();
 
         chai.expect(headersObj).to.have.property("Content-Type");
+        chai.expect(headersObj).to.have.property("Accept");
         chai.expect(headersObj).to.have.property("User-Agent");
-        chai.expect(Object.keys(headersObj)).to.have.lengthOf(2);
+        chai.expect(Object.keys(headersObj)).to.have.lengthOf(3);
     });
 
     describe("parse() (static)", () => {
@@ -96,7 +98,8 @@ describe("headers", () => {
             const result = headers.defaults;
 
             chai.expect(result).to.have.property("Content-Type");
-            chai.expect(Object.keys(result)).to.have.lengthOf(1);
+            chai.expect(result).to.have.property("Accept");
+            chai.expect(Object.keys(result)).to.have.lengthOf(2);
         });
 
         it("should return the default headers (node)", function () {
@@ -107,8 +110,9 @@ describe("headers", () => {
             const result = headers.defaults;
 
             chai.expect(result).to.have.property("Content-Type");
+            chai.expect(result).to.have.property("Accept");
             chai.expect(result).to.have.property("User-Agent");
-            chai.expect(Object.keys(result)).to.have.lengthOf(2);
+            chai.expect(Object.keys(result)).to.have.lengthOf(3);
         });
     });
 
@@ -121,7 +125,7 @@ describe("headers", () => {
 
             headers.set(object);
 
-            const result = headers.get();
+            const result = headers.getAll();
 
             checkHeaders(result, "x-foo", "bar");
             checkHeaders(result, "x-bar", "foo");
@@ -137,7 +141,7 @@ describe("headers", () => {
 
             headers.set(object, false);
 
-            const result = headers.get();
+            const result = headers.getAll();
 
             checkHeaders(result, "x-foo", "bar");
             checkHeaders(result, "x-bar", "foo");
@@ -153,7 +157,7 @@ describe("headers", () => {
 
             headers.set(object, false);
 
-            const result = headers.get();
+            const result = headers.getAll();
 
             chai.expect(result).to.deep.equal({
                 "X-Foo": "bar",
@@ -170,7 +174,7 @@ describe("headers", () => {
 
             headers.set(object, false);
 
-            const result = headers.get();
+            const result = headers.getAll();
 
             chai.expect(result).to.deep.equal({
                 "X-Foo": "bar"
@@ -188,6 +192,27 @@ describe("headers", () => {
     });
 
     describe("get()", () => {
+        it("should return the header value", () => {
+            const object = {
+                "x-foo": "bar",
+                "x-bar": "foo"
+            };
+
+            headers.set(object);
+
+            const result = headers.get("x-foo");
+
+            chai.expect(result).to.equal("bar");
+        });
+
+        it("should return undefined if the header does not exist", () => {
+            const result = headers.get("x-foo");
+
+            chai.expect(result).to.be.undefined;
+        });
+    });
+
+    describe("getAll()", () => {
         it("should return the headers", () => {
             const object = {
                 "x-foo": "bar",
@@ -196,7 +221,7 @@ describe("headers", () => {
 
             headers.set(object);
 
-            const result = headers.get();
+            const result = headers.getAll();
 
             checkHeaders(result, "x-foo", "bar");
             checkHeaders(result, "x-bar", "foo");
@@ -242,7 +267,7 @@ describe("headers", () => {
 
             headers.delete("x-foo");
 
-            const result = headers.get();
+            const result = headers.getAll();
 
             chai.expect(result).to.not.have.property("x-foo");
             checkHeaders(result, "x-bar", "foo");
@@ -260,7 +285,7 @@ describe("headers", () => {
 
             headers.clear();
 
-            const result = headers.get();
+            const result = headers.getAll();
 
             chai.expect(result).to.deep.equal(headers.defaults);
         });
@@ -268,7 +293,7 @@ describe("headers", () => {
         it("should remove all headers (including defaults)", () => {
             headers.clear(true);
 
-            const result = headers.get();
+            const result = headers.getAll();
 
             chai.expect(result).to.deep.equal({});
         });

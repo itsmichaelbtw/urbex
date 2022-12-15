@@ -201,10 +201,10 @@ export class RequestConfig {
         }
 
         const currentConfig = this.get();
-        const incomingHeaders = config.headers?.get() ?? {};
+        const incomingHeaders = config.headers?.getAll() ?? {};
         const incomingComponent = config.url?.toJSON() ?? {};
 
-        const mergedHeaders = merge(currentConfig.headers.get(), incomingHeaders);
+        const mergedHeaders = merge(currentConfig.headers.getAll(), incomingHeaders);
         const mergedComponent = merge(currentConfig.url.toJSON(), incomingComponent);
 
         const merged = deepMerge(currentConfig, config);

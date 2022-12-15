@@ -199,7 +199,7 @@ describe("client", () => {
         chai.expect(response.status).to.equal(200);
         chai.expect(response.config.url.href).to.equal(`${SERVER_URL}/200`);
         chai.expect(response.config.url.pathname).to.equal("/200");
-        chai.expect(response.config.headers.get()).to.have.property("X-Test");
+        chai.expect(response.config.headers.getAll()).to.have.property("X-Test");
     });
 
     it("should preserve existing headers when null or undefined is passed", async () => {
@@ -223,9 +223,9 @@ describe("client", () => {
         chai.expect(response.status).to.equal(200);
         chai.expect(response.config.url.href).to.equal(`${SERVER_URL}/200`);
         chai.expect(response.config.url.pathname).to.equal("/200");
-        chai.expect(response.config.headers.get()).to.have.property("X-Test");
-        chai.expect(response.config.headers.get()).to.not.have.property("X-Test2");
-        chai.expect(response.config.headers.get()).to.not.have.property("X-Test3");
+        chai.expect(response.config.headers.getAll()).to.have.property("X-Test");
+        chai.expect(response.config.headers.getAll()).to.not.have.property("X-Test2");
+        chai.expect(response.config.headers.getAll()).to.not.have.property("X-Test3");
     });
 
     it("should allow lowercase and uppercase methods", async () => {

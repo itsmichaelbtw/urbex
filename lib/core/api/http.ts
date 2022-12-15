@@ -15,7 +15,13 @@ import type {
 
 import { resolveRequest } from "./resolve-request";
 import { UrbexError, TimeoutError, NetworkError } from "../error";
-import { combineStrings, isString, ensureTrailingToken, isFunction } from "../../utils";
+import {
+    combineStrings,
+    isString,
+    ensureTrailingToken,
+    isFunction,
+    isUndefined
+} from "../../utils";
 
 export class NodeRequest implements UrbexRequestApi {
     private getAgentFromProtocol(protocol: string): typeof http | typeof https {
@@ -48,12 +54,16 @@ export class NodeRequest implements UrbexRequestApi {
                 config.headers.set({ "Accept-Encoding": "gzip, deflate, br" });
             }
 
+            if (isUndefined(config.data)) {
+                config.headers.delete("Content-Type");
+            }
+
             const options: https.RequestOptions | url.URL = {
                 protocol: ensureTrailingToken(":", config.url.protocol),
                 href: config.url.href,
                 hostname: config.url.hostname,
                 path: combineStrings("", config.url.pathname, config.url.search),
-                headers: config.headers.get(),
+                headers: config.headers.getAll(),
                 timeout: config.timeout
             };
 
