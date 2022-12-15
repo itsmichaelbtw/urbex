@@ -3,8 +3,6 @@ import type { ParsedURLComponent, PipelineExecutorsManager } from "../types";
 
 import { createEmptyScheme } from "../utils";
 
-export const REQUEST_BODY_METHODS = ["POST", "PUT", "PATCH"];
-
 export const URL_COMPONENT_KEYS: (keyof URLComponent)[] = [
     "href",
     "origin",
@@ -59,3 +57,4 @@ export const DEFAULT_URBEX_RESPONSE = createEmptyScheme<UrbexResponse>([
 ]);
 
 export const METHODS = ["PUT", "POST", "PATCH", "OPTIONS", "HEAD", "GET", "DELETE"];
+export const REQUEST_BODY_METHODS = ["POST", "PUT", "PATCH"];
