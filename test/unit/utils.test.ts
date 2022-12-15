@@ -1,33 +1,8 @@
 import chai from "chai";
 
-import {
-    clone,
-    deepMerge,
-    forEach,
-    hasOwnProperty,
-    isEmpty,
-    merge,
-    toStringCall,
-    extractMatchFromRegExp
-} from "../../lib/utils";
+import { clone, deepMerge, forEach, hasOwnProperty, isEmpty, merge } from "../../lib/utils";
 
 describe("utils", () => {
-    describe("toStringCall (Object.prototype.toString.call)", () => {
-        it("should return the correct string", () => {
-            const string = "test";
-            const number = 1;
-            const array = [1, 2, 3];
-            const object = { a: 1, b: 2, c: 3 };
-            const func = () => {};
-
-            chai.expect(toStringCall(string)).to.equal("string");
-            chai.expect(toStringCall(number)).to.equal("number");
-            chai.expect(toStringCall(array)).to.equal("array");
-            chai.expect(toStringCall(object)).to.equal("object");
-            chai.expect(toStringCall(func)).to.equal("function");
-        });
-    });
-
     describe("clone", () => {
         it("should clone an object", () => {
             const object = {
@@ -228,35 +203,6 @@ describe("utils", () => {
             const result = isEmpty(string);
 
             chai.assert.equal(result, true);
-        });
-    });
-
-    describe("extractMatchFromRegExp", () => {
-        it("should return the correct match", () => {
-            const string = "foo";
-            const regexp = new RegExp("foo");
-
-            const result = extractMatchFromRegExp(string, regexp);
-
-            chai.assert.equal(result, "foo");
-        });
-
-        it("should return the correct match with a group", () => {
-            const string = "foo";
-            const regexp = new RegExp("(foo)");
-
-            const result = extractMatchFromRegExp(string, regexp, 0);
-
-            chai.assert.equal(result, "foo");
-        });
-
-        it("should return a default value if no match is found", () => {
-            const string = "foo";
-            const regexp = new RegExp("bar");
-
-            const result = extractMatchFromRegExp(string, regexp, 0, "default");
-
-            chai.assert.equal(result, "default");
         });
     });
 });
