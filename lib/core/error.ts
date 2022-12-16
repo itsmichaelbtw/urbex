@@ -13,11 +13,19 @@ function replaceCallStackWithName(stack: string, name: string): string {
  * Base error class for Urbex that extends the native Error class.
  */
 export class UrbexError extends Error implements UrbexErrorType {
+    name: string = "UrbexError";
     status: number;
     request: any;
     config: InternalConfiguration<any>;
     response: UrbexResponse<any>;
-    message: string = "An error occurred while executing a request.";
+
+    constructor(message?: string) {
+        if (!message) {
+            message = "An error occurred while executing a request.";
+        }
+
+        super(message);
+    }
 
     static create<T extends typeof UrbexError>(
         this: T,
@@ -61,6 +69,18 @@ export class UrbexError extends Error implements UrbexErrorType {
 
     static isInstance<T extends typeof UrbexError>(error: any): error is InstanceType<T> {
         return error instanceof UrbexError;
+    }
+
+    public toJSON(): UrbexErrorType {
+        return {
+            name: this.name,
+            message: this.message,
+            status: this.status,
+            request: this.request,
+            config: this.config,
+            response: this.response,
+            stack: this.stack
+        };
     }
 }
 
