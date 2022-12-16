@@ -223,4 +223,8 @@ export interface UrbexErrorType {
      * The error message.
      */
     message: string;
+    /**
+     * The error stack.
+     */
+    stack?: string;
 }
