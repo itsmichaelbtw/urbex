@@ -14,7 +14,7 @@ const client = urbex.isolateClient({
     url: SERVER_URL
 });
 
-describe("errors", () => {
+describe("errors (integration)", () => {
     beforeEach(() => {
         client.reset();
 
