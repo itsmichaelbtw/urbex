@@ -14,7 +14,6 @@ import {
     lowercase,
     stringReplacer
 } from "../utils";
-import { debug } from "../debug";
 import { environment } from "../environment";
 
 const DEFAULT_BROWSER_HEADERS = {
@@ -153,7 +152,6 @@ export class UrbexHeaders {
      */
     public set(headers?: Headers, forceMerge = true): Headers {
         if (!isObject(headers)) {
-            debug("error", `Attempted to set headers with a non-object value: ${typeof headers}`);
             return headers;
         }
 
