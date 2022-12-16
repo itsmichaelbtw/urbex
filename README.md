@@ -1,6 +1,6 @@
 # urbex
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/orison-networks/urbex/Unit%20Tests?label=unit%20tests&style=flat-square)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/orison-networks/urbex/unit-tests.yml?label=unit%20tests&branch=main&style=flat-square)
 ![Github version](https://img.shields.io/github/package-json/v/orison-networks/urbex?style=flat-square)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 ![Typescript](https://img.shields.io/github/languages/top/orison-networks/urbex?style=flat-square)
